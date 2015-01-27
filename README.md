@@ -85,5 +85,5 @@ This is the JSON string of a vertex with edges:
 This is the JSON stirng of an edge:
 
 ```
-{\"to\":\"v_tae_homer\",\"label\":\"son of\",\"from\":\"v_tae_bart\",\"type\":\"edge\"}"
+{\"to\":\"v_tae_homer\",\"label\":\"son of\",\"from\":\"v_tae_bart\",\"type\":\"edge\"}
 ```
