@@ -53,7 +53,7 @@ Vertex v_tae_barney = graph.addVertex("tae_barney");
          
 Edge e_1 = graph.addEdge("e_1", v_tae_barney, v_tae_moe, "guest of");
 ```
-## Folloe edges
+## Follow edges
 
 Here a simple example how to follow edges in order to find vertices:
 
