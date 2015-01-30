@@ -1,4 +1,4 @@
-# A Graph API for Couchbase
+# CBGraph - A Graph API for Couchbase
 
 This is an implementation of Tinkerpop's Graph API for Couchbase
 
