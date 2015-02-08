@@ -51,8 +51,10 @@ public class ViewManager {
  
    
     //Available view definitions
-    private static ViewDef allEdgesViewDef = null;
-    private static ViewDef allVerticesViewDef = null;
+    private static ViewDef allEdgesViewDef;
+    private static ViewDef allEdgeLabelsViewDef;
+    private static ViewDef allVerticesViewDef;
+    private static ViewDef allVertexPropsViewDef;
     
     
     /**
@@ -105,6 +107,8 @@ public class ViewManager {
         
         defs.add(getAllEdgesViewDef());
         defs.add(getAllVerticesViewDef());
+        defs.add(getAllEdgeLabelsViewDef());
+        defs.add(getAllVertexPropsViewDef());
         
         createViews(defs);
     }
@@ -181,6 +185,24 @@ public class ViewManager {
     }
     
     /**
+     * To access the all vertex props view
+     * @return 
+     */
+    public static View getAllVertexPropsView()
+    {
+        return client.getView(DESIGN_DOC, getAllVertexPropsViewDef().getName());
+    }
+    
+    /**
+     * To access the all edge labels view
+     * @return 
+     */
+    public static View getAllEdgeLabelsView()
+    {
+        return client.getView(DESIGN_DOC, getAllEdgeLabelsViewDef().getName());
+    }
+    
+    /**
      * To get the all edges view definition
      * @return 
      */
@@ -203,7 +225,30 @@ public class ViewManager {
         
         return allVerticesViewDef;
     }
-    
+
+    /**
+     * To get the all edge labels view definition
+     * 
+     * @return 
+     */
+    public static ViewDef getAllEdgeLabelsViewDef() {
+        if (allEdgeLabelsViewDef == null)
+              allEdgeLabelsViewDef = new AllEdgeLabelsViewDef();
+        
+        return allEdgeLabelsViewDef;
+    }
+
+    /**
+     * To get the all vertex properties view definition
+     * @return 
+     */
+    public static ViewDef getAllVertexPropsViewDef() {
+        if (allVertexPropsViewDef == null)
+            allVertexPropsViewDef = new AllVertexPropsViewDef();
+        
+        return allVertexPropsViewDef;
+    }
+
     
     /**
      * Queries all documents of a view
@@ -212,7 +257,7 @@ public class ViewManager {
      * @param viewName
      * @return 
      */
-    public static ViewResponse queryAll(String designDocName, String viewName)
+    public static ViewResponse queryAll(String designDocName, String viewName, String startKey, String endKey)
     {
         ViewResponse result = null;
         
@@ -221,7 +266,18 @@ public class ViewManager {
         Query query = new Query();
         query.setIncludeDocs(false);
         query.setStale(Stale.FALSE);
-       
+        
+        if (startKey != null && endKey == null)
+        {
+            query.setKey(startKey);
+        }
+        
+        if (startKey != null && endKey != null)
+        {
+            query.setRange(startKey, endKey);
+        }
+        
+        
         boolean viewAccessible = false;
         int counter = 5;
         
@@ -261,7 +317,7 @@ public class ViewManager {
      */
     public static ViewResponse queryAllEdges()
     {
-        return queryAll(DESIGN_DOC, getAllEdgesViewDef().getName());
+        return queryAll(DESIGN_DOC, getAllEdgesViewDef().getName(), null, null);
     }
     
     /**
@@ -271,7 +327,44 @@ public class ViewManager {
      */
     public static ViewResponse queryAllVertices()
     {
-        return queryAll(DESIGN_DOC, getAllVerticesViewDef().getName());
+        return queryAll(DESIGN_DOC, getAllVerticesViewDef().getName(), null, null);
+    }
+    
+    /**
+     * Queries all edge labels
+     * @return 
+     */
+    public static ViewResponse queryAllEdgeLabels()
+    {
+        return queryAll(DESIGN_DOC, getAllEdgeLabelsViewDef().getName(), null, null);
+    }
+    
+    /**
+     * Queries for a specific edge label
+     * @param label
+     * @return 
+     */
+    public static ViewResponse queryAllEdgeLabels(String label)
+    {
+        return queryAll(DESIGN_DOC, getAllEdgeLabelsViewDef().getName(), label, null);
+    }
+    
+    /**
+     * Queries all vertex properties
+     * @return 
+     */
+    public static ViewResponse queryAllVertexProps()
+    {
+        return queryAll(DESIGN_DOC, getAllVertexPropsViewDef().getName(),null, null);
+    }
+    
+    /**
+     * Queries for a specific property
+     * @return 
+     */
+    public static ViewResponse queryAllVertexProps(String name)
+    {
+        return queryAll(DESIGN_DOC, getAllVertexPropsViewDef().getName(),name, null);
     }
     
 }

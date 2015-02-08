@@ -64,6 +64,11 @@ public class CouchbaseConfig extends BaseConfig {
         return this.props.getProperty("cb.admin.pwd");
     }
     
+    public String getDesignDoc()
+    {
+        return this.props.getProperty("cb.view.designdoc");
+    }
+     
     public String getAllEdgesView()
     {
         return this.props.getProperty("cb.view.alledges");
@@ -74,9 +79,13 @@ public class CouchbaseConfig extends BaseConfig {
         return this.props.getProperty("cb.view.allvertices");
     }
     
-    public String getDesignDoc()
+    public String getAllEdgeLablesView()
     {
-        return this.props.getProperty("cb.view.designdoc");
+        return this.props.getProperty("cb.view.alledgelabels");
     }
     
+    public String getAllVertexPropsView()
+    {
+        return this.props.getProperty("cb.view.allvertexprops");
+    }
 }

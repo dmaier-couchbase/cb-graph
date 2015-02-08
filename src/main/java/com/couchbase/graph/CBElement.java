@@ -20,9 +20,15 @@ import com.couchbase.client.CouchbaseClient;
 import com.couchbase.graph.cfg.ConfigManager;
 import com.couchbase.graph.con.ConnectionFactory;
 import com.couchbase.graph.error.DocNotFoundException;
+import com.couchbase.graph.helper.MapEntryComparator;
 import com.tinkerpop.blueprints.Element;
 import com.tinkerpop.blueprints.Graph;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 import org.json.simple.JSONObject;
@@ -276,13 +282,33 @@ public class CBElement implements Element {
     }
 
     /**
-     * Returns the JSON String of the element
+     * Returns the JSON String of the element.
+     * 
+     * This is mainly used for testing (easier assertEquals) purposes,
+     * and so the order of the properties is important here.
+     * 
      * @return 
      */
     @Override
     public String toString() {
-    
-      //TODO: There is no order guaranteed for to JSONString.
-      return innerObj.toJSONString();
+     
+        
+        //Create a list of the entries from the original JSON object
+        List<Map.Entry> entries = new ArrayList<>(innerObj.entrySet());
+        
+        //Sort the list
+        Collections.sort(entries, new MapEntryComparator());
+        
+        //Convert to a sorted map
+        Map sortedMap = new LinkedHashMap();
+        
+        for (Map.Entry entry : entries) {
+            
+            sortedMap.put(entry.getKey(), entry.getValue());
+        }
+     
+        
+        //Use JSONValue.toJSONString to output the value sorted
+        return JSONValue.toJSONString(innerObj);
     }
 }
