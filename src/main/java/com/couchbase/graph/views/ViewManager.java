@@ -255,6 +255,8 @@ public class ViewManager {
      * 
      * @param designDocName
      * @param viewName
+     * @param startKey
+     * @param endKey
      * @return 
      */
     public static ViewResponse queryAll(String designDocName, String viewName, String startKey, String endKey)
