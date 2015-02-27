@@ -15,7 +15,8 @@
  */
 
 /* 
- * A map function to index on properties
+ * A map function which implements a general purpose index on properties.
+ * 
  * 
  * @author David Maier <david.maier at couchbase.com>
  */
@@ -27,7 +28,7 @@ function map(doc, meta)
         {
             var val = doc.props[key];
             
-            emit(key, val);
+            emit("[" + key + "," + val + "]", null);
         }
     }
 }
