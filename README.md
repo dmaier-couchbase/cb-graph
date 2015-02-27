@@ -1,4 +1,4 @@
-# A Graph API for Couchbase
+# CBGraph - A Graph API for Couchbase
 
 This is an implementation of Tinkerpop's Graph API for Couchbase
 
@@ -53,6 +53,14 @@ Vertex v_tae_barney = graph.addVertex("tae_barney");
          
 Edge e_1 = graph.addEdge("e_1", v_tae_barney, v_tae_moe, "guest of");
 ```
+## Follow edges
+
+Here a simple example how to follow edges in order to find vertices:
+
+```
+Iterable<Vertex> guests = v_tae_moe.getVertices(Direction.OUT, "guest of");
+```
+
 
 ## How it is stored in Couchbase
 
@@ -85,5 +93,5 @@ This is the JSON string of a vertex with edges:
 This is the JSON stirng of an edge:
 
 ```
-{\"to\":\"v_tae_homer\",\"label\":\"son of\",\"from\":\"v_tae_bart\",\"type\":\"edge\"}"
+{\"to\":\"v_tae_homer\",\"label\":\"son of\",\"from\":\"v_tae_bart\",\"type\":\"edge\"}
 ```
