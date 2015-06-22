@@ -16,15 +16,14 @@
 
 package com.couchbase.graph.views;
 
-import com.couchbase.client.CouchbaseClient;
-import com.couchbase.client.protocol.views.DesignDocument;
-import com.couchbase.client.protocol.views.Query;
-import com.couchbase.client.protocol.views.Stale;
-import com.couchbase.client.protocol.views.View;
-import com.couchbase.client.protocol.views.ViewDesign;
-import com.couchbase.client.protocol.views.ViewResponse;
+import com.couchbase.client.java.Bucket;
+import com.couchbase.client.java.view.DesignDocument;
+import com.couchbase.client.java.view.Stale;
+import com.couchbase.client.java.view.View;
+import com.couchbase.client.java.view.ViewQuery;
+import com.couchbase.client.java.view.ViewResult;
 import com.couchbase.graph.cfg.ConfigManager;
-import com.couchbase.graph.con.ConnectionFactory;
+import com.couchbase.graph.conn.ConnectionFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -42,7 +41,7 @@ public class ViewManager {
     /**
      * The client instance to use
      */
-    public static final CouchbaseClient client = ConnectionFactory.getClient();
+    public static final Bucket client = ConnectionFactory.getBucketCon();
     
     /**
      * The default design document name
@@ -55,6 +54,7 @@ public class ViewManager {
     private static ViewDef allEdgeLabelsViewDef;
     private static ViewDef allVerticesViewDef;
     private static ViewDef allVertexPropsViewDef;
+    private static ViewDef allEdgePropsViewDef;
     
     
     /**
@@ -67,23 +67,21 @@ public class ViewManager {
     {      
         //Check if the Design document is available, otherwise create it         
         if (!designDocExists(designDocName)) {
-            DesignDocument designDoc = new DesignDocument(designDocName);
 
-            for (ViewDef viewDef : viewDefs) {
+            
+            List<View> views = new ArrayList<>();
+            
+            for (View view : viewDefs) {
                 
-                ViewDesign viewDesign;
-                
-                //Derive the ViewDesign
-                if (!viewDef.hasReduceFunc) {
-                    viewDesign = new ViewDesign(viewDef.getName(), viewDef.getMapFunc());
-                } else {
-                    viewDesign = new ViewDesign(designDocName, viewDef.getMapFunc(), viewDef.getReduceFunc());
-                }
-
-                designDoc.getViews().add(viewDesign);
+                views.add(view);
             }
+            
+            DesignDocument designDoc = DesignDocument.create(designDocName, views );
+        
+            
+            client.bucketManager().insertDesignDocument(designDoc);
+            
 
-            client.createDesignDoc(designDoc);
         }
     }
     
@@ -109,6 +107,7 @@ public class ViewManager {
         defs.add(getAllVerticesViewDef());
         defs.add(getAllEdgeLabelsViewDef());
         defs.add(getAllVertexPropsViewDef());
+        defs.add(getAllEdgePropsViewDef());
         
         createViews(defs);
     }
@@ -122,19 +121,12 @@ public class ViewManager {
      */
     public static boolean designDocExists(String name)
     {
-        //Check if the Design document is available, otherwise create it
-        DesignDocument designDoc = null;
-        
-        try
-        {
-            designDoc = client.getDesignDoc(name);
-        
-        }catch (Exception e)
-        {
-            return false;
-        }
-        
-        return true;
+       DesignDocument designDoc = null;   
+       
+       designDoc = client.bucketManager().getDesignDocument(name);
+       if (designDoc != null) return true;
+     
+        return false;
     }
     
     /**
@@ -146,14 +138,20 @@ public class ViewManager {
     }
     
     /**
-     * To delete a design document
+     * To delete a design document, if the design document was not existent also
+     * true is returned
      * 
      * @param designDoc
      * @return 
      */
     public static boolean deleteDesignDoc(String designDoc)
     {
-        return client.deleteDesignDoc(designDoc);
+        if (designDocExists())
+        {
+            return client.bucketManager().removeDesignDocument(designDoc);
+        }
+        
+        return true;
     }
     
     /**
@@ -163,44 +161,9 @@ public class ViewManager {
      */
     public static boolean deleteDesignDoc()
     {
-       return deleteDesignDoc(DESIGN_DOC);
+       return deleteDesignDoc(DESIGN_DOC);       
     }
     
-    /**
-     * To access the all edges view
-     * @return 
-     */
-    public static View getAllEdgesView()
-    {
-        return client.getView(DESIGN_DOC, getAllEdgesViewDef().getName());
-    }
-    
-    /**
-     * To access the all vertices view
-     * @return 
-     */
-    public static View getAllVerticesView()
-    {
-        return client.getView(DESIGN_DOC, getAllVerticesViewDef().getName());
-    }
-    
-    /**
-     * To access the all vertex props view
-     * @return 
-     */
-    public static View getAllVertexPropsView()
-    {
-        return client.getView(DESIGN_DOC, getAllVertexPropsViewDef().getName());
-    }
-    
-    /**
-     * To access the all edge labels view
-     * @return 
-     */
-    public static View getAllEdgeLabelsView()
-    {
-        return client.getView(DESIGN_DOC, getAllEdgeLabelsViewDef().getName());
-    }
     
     /**
      * To get the all edges view definition
@@ -248,10 +211,21 @@ public class ViewManager {
         
         return allVertexPropsViewDef;
     }
+    
+    /**
+     * To get the all edge properties view definition
+     * @return 
+     */
+    public static ViewDef getAllEdgePropsViewDef() {
+        if (allEdgePropsViewDef == null)
+            allEdgePropsViewDef = new AllEdgePropsViewDef();
+        
+        return allEdgePropsViewDef;
+    }
 
     
     /**
-     * Queries all documents of a view
+     * Queries all documents of a view with an optional range parameter
      * 
      * @param designDocName
      * @param viewName
@@ -259,55 +233,24 @@ public class ViewManager {
      * @param endKey
      * @return 
      */
-    public static ViewResponse queryAll(String designDocName, String viewName, String startKey, String endKey)
+    public static ViewResult query(String designDocName, String viewName, String startKey, String endKey)
     {
-        ViewResponse result = null;
+        ViewResult result = null;
         
         //Perform the query
-        View view = client.getView(designDocName, viewName);
-        Query query = new Query();
-        query.setIncludeDocs(false);
-        query.setStale(Stale.FALSE);
-        
-        if (startKey != null && endKey == null)
+        ViewQuery query = ViewQuery.from(designDocName, viewName).inclusiveEnd(true).stale(Stale.FALSE);
+                
+        if (startKey != null)
         {
-            query.setKey(startKey);
+            query = query.startKey(startKey);
         }
         
-        if (startKey != null && endKey != null)
+        if (endKey != null)
         {
-            query.setRange(startKey, endKey);
+            query = query.endKey(endKey);
         }
         
-        
-        boolean viewAccessible = false;
-        int counter = 5;
-        
-        while (!viewAccessible && counter != 0)
-        {
-            try
-            {
-                result = client.query(view, query);
-                viewAccessible = true;
-                
-                LOG.finest("The view is now accessible");
-
-            }
-            catch (Exception e)
-            {
-                LOG.finest("The view is not yet accessible");
-                
-                try {
-                    
-                    Thread.sleep(1000);
-                
-                } catch (InterruptedException ex) {
-                    //Do nothing
-                }
-                
-                counter-=1;
-            }
-        }
+        result = client.query(query);
         
         return result;
     }
@@ -317,9 +260,9 @@ public class ViewManager {
      * 
      * @return 
      */
-    public static ViewResponse queryAllEdges()
+    public static ViewResult queryAllEdges()
     {
-        return queryAll(DESIGN_DOC, getAllEdgesViewDef().getName(), null, null);
+        return query(DESIGN_DOC, getAllEdgesViewDef().name(), null, null);
     }
     
     /**
@@ -327,18 +270,18 @@ public class ViewManager {
      * 
      * @return 
      */
-    public static ViewResponse queryAllVertices()
+    public static ViewResult queryAllVertices()
     {
-        return queryAll(DESIGN_DOC, getAllVerticesViewDef().getName(), null, null);
+        return query(DESIGN_DOC, getAllVerticesViewDef().name(), null, null);
     }
     
     /**
      * Queries all edge labels
      * @return 
      */
-    public static ViewResponse queryAllEdgeLabels()
+    public static ViewResult queryAllEdgeLabels()
     {
-        return queryAll(DESIGN_DOC, getAllEdgeLabelsViewDef().getName(), null, null);
+        return query(DESIGN_DOC, getAllEdgeLabelsViewDef().name(), null, null);
     }
     
     /**
@@ -346,27 +289,52 @@ public class ViewManager {
      * @param label
      * @return 
      */
-    public static ViewResponse queryAllEdgeLabels(String label)
+    public static ViewResult queryAllEdgeLabels(String label)
     {
-        return queryAll(DESIGN_DOC, getAllEdgeLabelsViewDef().getName(), label, null);
+        return query(DESIGN_DOC, getAllEdgeLabelsViewDef().name(), label, null);
     }
     
     /**
      * Queries all vertex properties
      * @return 
      */
-    public static ViewResponse queryAllVertexProps()
+    public static ViewResult queryAllVertexProps()
     {
-        return queryAll(DESIGN_DOC, getAllVertexPropsViewDef().getName(),null, null);
+        return query(DESIGN_DOC, getAllVertexPropsViewDef().name(),null, null);
+    }
+    
+    /**
+     * Queries all edge properties
+     * 
+     * @param key
+     * @param value
+     * @return 
+     */
+    public static ViewResult queryAllEdgeProps(String key, String value)
+    {
+        return query(DESIGN_DOC, getAllVertexPropsViewDef().name(), genCompKey(key, value), genCompKey(key, value));
     }
     
     /**
      * Queries for a specific property
+     * @param key
+     * @param value
      * @return 
      */
-    public static ViewResponse queryAllVertexProps(String name)
+    public static ViewResult queryAllVertexProps(String key, String value)
     {
-        return queryAll(DESIGN_DOC, getAllVertexPropsViewDef().getName(),name, null);
+        return query(DESIGN_DOC, getAllVertexPropsViewDef().name(),genCompKey(key, value), genCompKey(key, value));
     }
     
+    /**
+     * To generate a compound key from a KV-pair
+     * 
+     * @param key
+     * @param value
+     * @return 
+     */
+    private static String genCompKey(String key, String value)
+    {
+        return "[" + key + "," + value + "]";
+    }
 }

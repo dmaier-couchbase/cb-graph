@@ -16,23 +16,19 @@
 
 package com.couchbase.graph;
 
-import com.couchbase.client.CouchbaseClient;
+import com.couchbase.client.java.Bucket;
+import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.graph.cfg.ConfigManager;
-import com.couchbase.graph.con.ConnectionFactory;
+import com.couchbase.graph.conn.ConnectionFactory;
 import com.couchbase.graph.error.DocNotFoundException;
-import com.couchbase.graph.helper.MapEntryComparator;
+import com.couchbase.graph.helper.JSONHelper;
 import com.tinkerpop.blueprints.Element;
 import com.tinkerpop.blueprints.Graph;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
 
 /**
  * Both vertices and edges are elemnets
@@ -55,7 +51,7 @@ public class CBElement implements Element {
      * We want to have interactive access to the Vertex, so we need to read the
      * data from the database without caching it in this class
      */
-    protected static final CouchbaseClient client = ConnectionFactory.getClient();
+    protected static final Bucket client = ConnectionFactory.getBucketCon();
 
     /**
      * The id, so the name of the element
@@ -75,13 +71,13 @@ public class CBElement implements Element {
     /**
      * The JSON object which is associated to this element
      */
-    protected JSONObject innerObj;
+    protected JsonObject innerObj;
     
     
     /**
      * The properties of the inner JSONObject
      */
-    protected JSONObject innerProps;
+    protected JsonObject innerProps;
     
     
     /**
@@ -133,8 +129,8 @@ public class CBElement implements Element {
         {
             if (innerObj == null || refreshEnabled)
             {
-                innerObj = (JSONObject) JSONValue.parse(client.get(cbKey).toString());
-                innerProps = (JSONObject) innerObj.get(CBModel.PROP_PROPS);
+                innerObj = client.get(cbKey).content();
+                innerProps = innerObj.getObject(CBModel.PROP_PROPS);
             
                 return true;
             }
@@ -185,12 +181,11 @@ public class CBElement implements Element {
     public Set<String> getPropertyKeys() {
         
         Set<String> result = new HashSet<>();
-        
-        
+               
         try {
 
             refresh();
-            result = innerProps.keySet();
+            result = innerProps.getNames();
         
         } catch (DocNotFoundException e) {
             
@@ -212,9 +207,9 @@ public class CBElement implements Element {
        
         try {
             refresh();
-            innerProps.put(key, value);
-            client.replace(cbKey, innerObj.toJSONString());
-      
+            innerProps.put(key, value);      
+            client.replace(JsonDocument.create(cbKey, innerObj));
+           
         } catch (DocNotFoundException e) {
             
             LOG.severe(e.toString());
@@ -234,11 +229,11 @@ public class CBElement implements Element {
         try {
             
             refresh();
-            Object removed = innerProps.remove(key);
+            Object removed = innerProps.removeKey(key);
             
             if (removed != null)
             {
-                client.replace(cbKey, innerObj);
+                client.replace(JsonDocument.create(cbKey, innerObj));
                 return (T) removed;
             }
             
@@ -258,7 +253,7 @@ public class CBElement implements Element {
     @Override
     public void remove() {
         
-        client.delete(cbKey);
+        client.remove(cbKey);
     }
 
     /**
@@ -291,24 +286,10 @@ public class CBElement implements Element {
      */
     @Override
     public String toString() {
-     
+                
         
-        //Create a list of the entries from the original JSON object
-        List<Map.Entry> entries = new ArrayList<>(innerObj.entrySet());
-        
-        //Sort the list
-        Collections.sort(entries, new MapEntryComparator());
-        
-        //Convert to a sorted map
-        Map sortedMap = new LinkedHashMap();
-        
-        for (Map.Entry entry : entries) {
-            
-            sortedMap.put(entry.getKey(), entry.getValue());
-        }
-     
-        
-        //Use JSONValue.toJSONString to output the value sorted
-        return JSONValue.toJSONString(innerObj);
+        return JSONHelper.sort(innerObj).toString();
+
     }
+    
 }

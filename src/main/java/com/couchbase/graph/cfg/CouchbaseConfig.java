@@ -88,4 +88,16 @@ public class CouchbaseConfig extends BaseConfig {
     {
         return this.props.getProperty("cb.view.allvertexprops");
     }
+    
+    public String getAllEdgePropsView()
+    {
+        return this.props.getProperty("cb.view.alledgeprops");
+    }
+    
+    public boolean isViewAutoCreateEnabled()
+    {
+        String crViesStr = this.props.getProperty("cb.view.autocreate");
+        
+        return Boolean.parseBoolean(crViesStr);   
+    }
 }

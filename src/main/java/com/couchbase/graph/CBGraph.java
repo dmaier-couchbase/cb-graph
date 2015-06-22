@@ -16,10 +16,13 @@
 
 package com.couchbase.graph;
 
-import com.couchbase.client.CouchbaseClient;
-import com.couchbase.client.protocol.views.ViewResponse;
-import com.couchbase.client.protocol.views.ViewRow;
-import com.couchbase.graph.con.ConnectionFactory;
+import com.couchbase.client.java.Bucket;
+import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.view.ViewResult;
+import com.couchbase.client.java.view.ViewRow;
+import com.couchbase.graph.cfg.ConfigManager;
+import com.couchbase.graph.conn.ConnectionFactory;
 import com.couchbase.graph.error.DocNotFoundException;
 import com.couchbase.graph.error.IdGenException;
 import com.couchbase.graph.views.ViewManager;
@@ -33,7 +36,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.json.simple.JSONObject;
 
 /**
  * A Blueprints implementation for Couchbase Server
@@ -56,7 +58,7 @@ public class CBGraph implements Graph {
     /**
      * The client to use to connect to the Couchbase cluster
      */
-    private final CouchbaseClient client;
+    private final Bucket client;
 
     /**
      * The default connector
@@ -67,10 +69,10 @@ public class CBGraph implements Graph {
         this.features = new CBFeatures();
         
         //Init the client connection
-        this.client = ConnectionFactory.getClient();
+        this.client = ConnectionFactory.getBucketCon();
         
         //Init the views
-        ViewManager.createViews();
+        if (ConfigManager.getCbConfig().isViewAutoCreateEnabled()) ViewManager.createViews();
     }
     
     
@@ -102,25 +104,29 @@ public class CBGraph implements Graph {
                 id = CBVertex.genVertexId();
             }
 
-            JSONObject v = new JSONObject();
+            
+            JsonObject v = JsonObject.empty();
             v.put(CBModel.PROP_TYPE, CBModel.VAL_TYPE_VERTEX);
 
-            JSONObject props = new JSONObject();
+            JsonObject props = JsonObject.empty();
             v.put(CBModel.PROP_PROPS, props);
 
-            JSONObject in = new JSONObject();
-            JSONObject out = new JSONObject();
-            JSONObject edges = new JSONObject();
+            JsonObject in = JsonObject.empty();
+            JsonObject out = JsonObject.empty();
+            JsonObject edges = JsonObject.empty();
+                    
             edges.put(CBModel.PROP_EDGES_IN, in);
             edges.put(CBModel.PROP_EDGES_OUT, out);
 
             v.put(CBModel.PROP_EDGES, edges);
 
-            client.add(CBVertex.genVertexKey(id), v.toJSONString());
-
+            JsonDocument doc = JsonDocument.create(CBVertex.genVertexKey(id), v);
+            client.insert(doc);
+            
             result = new CBVertex(id, this);
 
         } catch (IdGenException | DocNotFoundException ex) {
+            
             LOG.severe(ex.toString());
             return result;
         }
@@ -173,12 +179,12 @@ public class CBGraph implements Graph {
         
         List<Vertex> result = new ArrayList<>();
        
-        ViewResponse queryResult = ViewManager.queryAllVertices();
+        ViewResult queryResult = ViewManager.queryAllVertices();
         
         for (ViewRow v : queryResult) {
 
-            String currKey = v.getKey();
-            String currId = v.getId();
+            String currKey = v.key().toString();
+            String currId = v.id();
             
             LOG.log(Level.FINEST,"(id, key) = " + "({0}, {1})", new Object[]{currId, currKey});
             
@@ -208,24 +214,29 @@ public class CBGraph implements Graph {
     public Iterable<Vertex> getVertices(String key, Object value) {
      
         List<Vertex> result = new ArrayList<>();
+      
+        ViewResult queryResult = ViewManager.queryAllVertexProps(key, value.toString());
         
-        //TODO: This requires a view for each property of a vertex
-        //As an alternative we could store an additional property index
-        //'$key_$value' : { 'ref':'$vKey'}
-        //So the following implementation is not the best one, because it 
-        //goes over all vertices  
-        Iterable<Vertex> allVertices = getVertices();
-        
-        for (Vertex vertex : allVertices) {
-        
-            Object currVal = vertex.getProperty(key);
+        for (ViewRow v : queryResult) 
+        {
+            String currKey = v.key().toString();
+            String currId = v.id();
             
-            if (currVal != null && currVal.equals(value))
+            LOG.log(Level.FINEST,"(id, key) = " + "({0}, {1})", new Object[]{currId, currKey});
+            
+            try
             {
-                result.add(vertex);
+                Vertex currV = new CBVertex(currKey, this);
+
+                result.add(currV);
             }
-        }
-        
+            catch (DocNotFoundException e)
+            {
+                LOG.severe(e.toString());
+            }
+            
+        }   
+         
         return result;
     }
 
@@ -256,24 +267,33 @@ public class CBGraph implements Graph {
             v2CB.refresh();
 
             //Create a new edge document
-            JSONObject edge = new JSONObject();
+            JsonObject edge = JsonObject.empty();
+            edge.put(CBModel.PROP_PROPS, JsonObject.empty());
             edge.put(CBModel.PROP_TYPE, CBModel.VAL_TYPE_EDGE);
             edge.put(CBModel.PROP_FROM, v1CB.getCbKey());
             edge.put(CBModel.PROP_TO, v2CB.getCbKey());
             edge.put(CBModel.PROP_LABEL, label);
             
-            String eKey = CBEdge.genEdgeKey(v1CB.getId(),label, v2CB.getId());
+            String eKey;
+                    
+            if (id == null)
+             eKey = CBEdge.genEdgeKey(v1CB.getId(),label, v2CB.getId());
+            else
+             eKey = CBModel.EDGE_PREFIX + id; 
             
             //Add the edege object
-            client.add(eKey, edge.toJSONString());
+            client.insert(JsonDocument.create(eKey, edge));
 
             //Add the edge to the outgoing adjacency list of this vertex
             v1CB.addEdgeToAdjacencyList(label, eKey, Direction.OUT);
 
             //Add the edge to the incoming adjacency list of the other vertex
             v2CB.addEdgeToAdjacencyList(label, eKey, Direction.IN);
-
-            result = new CBEdge(eKey, this);
+            
+            if (id == null)
+                result = new CBEdge(eKey, this);
+            else
+                result = new CBEdge(eKey, this);
 
         } catch (DocNotFoundException e) {
 
@@ -293,10 +313,9 @@ public class CBGraph implements Graph {
        
         Edge result = null;
         
-        //This may cause a null pointer exception and should be tested
+        //TODO: This may cause a null pointer exception and should be tested
         String eKey = CBModel.EDGE_PREFIX + id.toString();
        
-        
         try {
             
             result = new CBEdge(eKey, this);
@@ -331,13 +350,13 @@ public class CBGraph implements Graph {
         
         List<Edge> result = new ArrayList<>();
         
-        ViewResponse queryResult = ViewManager.queryAllEdges();
+        ViewResult queryResult = ViewManager.queryAllEdges();
         
         for (ViewRow v : queryResult) {
             
             try {
             
-                result.add(new CBEdge(v.getKey(), this));
+                result.add(new CBEdge(v.id(), this));
             
             } catch (DocNotFoundException e) {
                 
@@ -359,22 +378,23 @@ public class CBGraph implements Graph {
     @Override
     public Iterable<Edge> getEdges(String key, Object value) {
         
-        //See getVertices regarding the comment how to implement it better
         List<Edge> result = new ArrayList<>();
         
-        Iterable<Edge> queryResult = getEdges();
+        ViewResult queryResult = ViewManager.queryAllEdgeProps(key, value.toString());
         
-        for (Edge edge : queryResult) {
-         
-            Object currVal = edge.getProperty(key);
+        for (ViewRow viewRow : queryResult) {
+        
+            try {
             
-            if (currVal != null && currVal.equals(value))
-            {
-                result.add(edge);
+                result.add(new CBEdge(viewRow.id(),this));
+            
+            } catch (DocNotFoundException e) {
+                
+                LOG.severe(e.toString());
             }
-            
         }
         
+         
         return result;
     }
 
@@ -395,6 +415,6 @@ public class CBGraph implements Graph {
     @Override
     public void shutdown() {
        
-        client.shutdown();
+        client.close();
     }
 }

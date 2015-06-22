@@ -16,8 +16,12 @@
 
 package com.couchbase.graph;
 
+import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonArray;
+import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.graph.error.DocNotFoundException;
 import com.couchbase.graph.error.IdGenException;
+import com.couchbase.graph.helper.JSONHelper;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
@@ -25,9 +29,8 @@ import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.VertexQuery;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
+import java.util.Set;
 import java.util.logging.Logger;
-import org.json.simple.*;
 
 /**
  * The implementation of an Vertex
@@ -44,17 +47,17 @@ public final class CBVertex extends CBElement implements Vertex {
     /**
      * The edges those are belonging to this vertex
      */
-    private JSONObject innerEdges;
+    private JsonObject innerEdges;
     
     /**
      * The inner outgoing edges
      */
-    private JSONObject innerOutgoingEdges;
+    private JsonObject innerOutgoingEdges;
     
     /**
      * The inner incoming edges
      */
-    private JSONObject innerIncomingEdges;
+    private JsonObject innerIncomingEdges;
     
      /**
      * The inner counter which is used for key generations
@@ -122,7 +125,7 @@ public final class CBVertex extends CBElement implements Vertex {
             for (String label : labels) {
 
                 if (drctn.equals(Direction.IN) || drctn.equals(Direction.BOTH)) {
-                    JSONArray labeledInEdges = (JSONArray) innerIncomingEdges.get(label);
+                    JsonArray labeledInEdges = innerIncomingEdges.getArray(label);
 
                     for (Object eKey : labeledInEdges) {
 
@@ -131,7 +134,7 @@ public final class CBVertex extends CBElement implements Vertex {
                 }
 
                 if (drctn.equals(Direction.OUT) || drctn.equals(Direction.BOTH)) {
-                    JSONArray labeledOutEdges = (JSONArray) innerOutgoingEdges.get(label);
+                    JsonArray labeledOutEdges = innerOutgoingEdges.getArray(label);
 
                     for (Object eKey : labeledOutEdges) {
 
@@ -159,29 +162,35 @@ public final class CBVertex extends CBElement implements Vertex {
             
             refresh();
 
-            for (Object oEdgeArray : this.innerIncomingEdges.values()) {
-
-                JSONArray edgeArray = (JSONArray) oEdgeArray;
-
-                for (Object edgeKey : edgeArray) {
-
+            Set<String> labels = innerIncomingEdges.getNames();
+            
+            for (String label : labels) {
+             
+                JsonArray edgeArray = innerIncomingEdges.getArray(label);
+                
+                for (Object edgeKey : edgeArray)
+                {
                     Edge edge = new CBEdge(edgeKey.toString(), graph);
-
                     result.add(edge);
                 }
+                
             }
             
-            for (Object oEdgeArray : this.innerOutgoingEdges.values()) {
-
-                JSONArray edgeArray = (JSONArray) oEdgeArray;
-
-                for (Object edgeKey : edgeArray) {
-
+            
+            labels = innerOutgoingEdges.getNames();
+            
+            for (String label : labels) {
+             
+                JsonArray edgeArray = innerOutgoingEdges.getArray(label);
+                
+                for (Object edgeKey : edgeArray)
+                {
                     Edge edge = new CBEdge(edgeKey.toString(), graph);
-
                     result.add(edge);
                 }
+                
             }
+            
 
         } catch (DocNotFoundException ex) {
             LOG.severe(ex.toString());
@@ -283,11 +292,11 @@ public final class CBVertex extends CBElement implements Vertex {
 
             //TODO: This could be abit more beautiful, just a code duplication
             if (drctn.equals(Direction.OUT) || drctn.equals(Direction.BOTH)) {
-                JSONArray labeldOutEdges = (JSONArray) innerOutgoingEdges.get(label);
+                JsonArray labeldOutEdges = innerOutgoingEdges.getArray(label);
                 
                 if (labeldOutEdges == null)
                 {
-                    labeldOutEdges = new JSONArray();
+                    labeldOutEdges = JsonArray.empty();
                     
                     innerOutgoingEdges.put(label, labeldOutEdges);
                 }
@@ -296,11 +305,11 @@ public final class CBVertex extends CBElement implements Vertex {
             }
 
             if (drctn.equals(Direction.IN) || drctn.equals(Direction.BOTH)) {
-                JSONArray labeledInEdges = (JSONArray) innerIncomingEdges.get(label);
+                JsonArray labeledInEdges = innerIncomingEdges.getArray(label);
                 
                 if (labeledInEdges  == null)
                 {
-                    labeledInEdges = new JSONArray();
+                    labeledInEdges = JsonArray.empty();
                     
                     innerIncomingEdges.put(label, labeledInEdges);
                 }
@@ -308,7 +317,7 @@ public final class CBVertex extends CBElement implements Vertex {
                 labeledInEdges.add(edgeKey);
             }
 
-            client.replace(cbKey, innerObj.toJSONString());
+            client.replace(JsonDocument.create(cbKey, innerObj));
 
         } catch (DocNotFoundException e) {
             
@@ -328,16 +337,19 @@ public final class CBVertex extends CBElement implements Vertex {
             refresh();
 
             if (drctn.equals(Direction.OUT) || drctn.equals(Direction.BOTH)) {
-                JSONArray labeldOutEdges = (JSONArray) innerOutgoingEdges.get(label);
-                labeldOutEdges.remove(edgeKey);
+                JsonArray labeldOutEdges = innerOutgoingEdges.getArray(label);
+                
+                JSONHelper.remove(labeldOutEdges, edgeKey);
+                
             }
 
             if (drctn.equals(Direction.IN) || drctn.equals(Direction.BOTH)) {
-                JSONArray labeledInEdges = (JSONArray) innerIncomingEdges.get(label);
-                labeledInEdges.remove(edgeKey);
+                JsonArray labeledInEdges = innerIncomingEdges.getArray(label);
+                
+                JSONHelper.remove(labeledInEdges, edgeKey);
             }
 
-            client.replace(cbKey, innerObj.toJSONString());
+            client.replace(JsonDocument.create(cbKey, innerObj));
 
         } catch (DocNotFoundException e) {
             LOG.severe(e.toString());
@@ -356,9 +368,9 @@ public final class CBVertex extends CBElement implements Vertex {
                 
         if (super.refresh())
         {
-            this.innerEdges = (JSONObject) innerObj.get(CBModel.PROP_EDGES);
-            this.innerOutgoingEdges = (JSONObject) innerEdges.get(CBModel.PROP_EDGES_OUT);
-            this.innerIncomingEdges = (JSONObject) innerEdges.get(CBModel.PROP_EDGES_IN);
+            this.innerEdges =  innerObj.getObject(CBModel.PROP_EDGES);
+            this.innerOutgoingEdges = innerEdges.getObject(CBModel.PROP_EDGES_OUT);
+            this.innerIncomingEdges = innerEdges.getObject(CBModel.PROP_EDGES_IN);
             
             return true;
         }
@@ -421,24 +433,16 @@ public final class CBVertex extends CBElement implements Vertex {
      */
     public static long genVertexId() throws IdGenException
     {
-        try {
-            //TODO: Does not work, why
-            //client.add(CBModel.VERTEX_COUNTER_KEY, 0).get();
-            
-            innerIdCounter = client.incr(CBModel.VERTEX_COUNTER_KEY, 1);
-            
-            if (innerIdCounter == -1)
-            {
-                innerIdCounter = 0;
-                client.add(CBModel.VERTEX_COUNTER_KEY, "" + 0).get();
-            }
-            
+        try 
+        {
+            innerIdCounter = client.counter(CBModel.VERTEX_COUNTER_KEY, 1).content();
             return innerIdCounter;
-
-        } catch (InterruptedException | ExecutionException e) {
-           
+        }
+        catch(Exception e)
+        {
             throw new IdGenException(e);
         }
+               
     }
     
     /**
@@ -451,6 +455,7 @@ public final class CBVertex extends CBElement implements Vertex {
     {
           return CBModel.VERTEX_KEY.replace("{1}", id.toString());
     }
+    
     
     /**
      * Returns the id of the vertex by parsing the key

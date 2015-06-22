@@ -84,18 +84,11 @@ public final class CBEdge extends CBElement implements Edge {
      * @param graph 
      * @throws com.couchbase.graph.error.DocNotFoundException 
      */
-    public CBEdge(String eKey, Graph graph) throws DocNotFoundException
-    { 
-        super(parseEdgeKey(eKey)[0], graph);
+    public CBEdge(String eKey,  Graph graph) throws DocNotFoundException
+    {  
+        super(parseEdgeKey(eKey)[0],graph);
         
         this.cbKey = eKey;
-     
-        String[] parsedKey = parseEdgeKey(eKey);
-
-        this.innerFrom = parsedKey[2];
-        this.innerLabel = parsedKey[3];
-        this.innerTo = parsedKey[4];
-     
         this.refresh();
     }
 
@@ -163,6 +156,7 @@ public final class CBEdge extends CBElement implements Edge {
         {   
             innerFrom = innerObj.get(CBModel.PROP_FROM).toString();
             innerTo = innerObj.get(CBModel.PROP_TO).toString();
+            innerLabel = innerObj.get(CBModel.PROP_LABEL).toString();
                   
             return true;
         }
@@ -236,23 +230,28 @@ public final class CBEdge extends CBElement implements Edge {
     {
         String[] result = new String[5];
         
+        
         int idStartIdx = CBModel.EDGE_PREFIX.length();
         String id = eKey.substring(idStartIdx, eKey.length());
         result[0] = id;
         result[1] = CBModel.EDGE_PREFIX;
         
-        int fromEndIdx = id.indexOf(CBModel.EDGE_DELIM);
-        String from = id.substring(0, fromEndIdx);
-        result[2] = from;
-        
-        int toStartIdx = id.lastIndexOf(CBModel.EDGE_DELIM) + CBModel.EDGE_DELIM.length();
-        String to = id.substring(toStartIdx, id.length());
-        result[4] = to;
-        
-        int labelStartIdx = id.indexOf("|");
-        int labelEndIdx = id.lastIndexOf("|");
-        String label = id.substring(labelStartIdx+1, labelEndIdx);
-        result[3] = label;
+        if (eKey.contains(CBModel.EDGE_DELIM + "|") && eKey.contains("|"+CBModel.EDGE_DELIM))
+        {
+            int fromEndIdx = id.indexOf(CBModel.EDGE_DELIM);
+            String from = id.substring(0, fromEndIdx);
+            result[2] = from;
+
+            int toStartIdx = id.lastIndexOf(CBModel.EDGE_DELIM) + CBModel.EDGE_DELIM.length();
+            String to = id.substring(toStartIdx, id.length());
+            result[4] = to;
+
+            int labelStartIdx = id.indexOf("|");
+            int labelEndIdx = id.lastIndexOf("|");
+            String label = id.substring(labelStartIdx + 1, labelEndIdx);
+            result[3] = label;
+
+        }
         
         return result;
     }

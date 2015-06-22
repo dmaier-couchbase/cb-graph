@@ -16,18 +16,17 @@
 
 package com.couchbase.graph.views;
 
+import com.couchbase.client.java.view.View;
 import com.couchbase.graph.resources.FileResourceManager;
 
 /**
  * A view definition has map function and a reduce function. Both functions are
  * JS texts.
  * 
- * TODO: Found later out that ViewDesign of the Couchbase Library is exactly the
- * same thing. Needs to be refactored later.
  * 
  * @author David Maier <david.maier at couchbase.com>
  */
-public class ViewDef {
+public class ViewDef implements View {
     
     /**
      * The name of a view
@@ -69,41 +68,30 @@ public class ViewDef {
     public ViewDef(String name, String mapFuncName, String reduceFuncName)
     {
         this(name, mapFuncName);
+        
+        //TODO: Classpath Resource instead File Resource because otherwise the resource is not available as soon as bundled
         this.reduceFunc = FileResourceManager.getFileResource(reduceFuncName).toString();
         this.hasReduceFunc = true;
     }
 
-    /**
-     * To get the name
-     * @return 
-     */
-    public String getName() {
+    @Override
+    public String name() {
         return this.name;
     }
 
-    /**
-     * To get the map function
-     * @return 
-     */
-    public String getMapFunc() {
+    @Override
+    public String map() {
         return this.mapFunc;
     }
-    
-    /**
-     * To determine if the view definition has a reduce function
-     * @return 
-     */
-    public boolean hasReduceFunc()
-    {
-        return this.hasReduceFunc;
+
+    @Override
+    public String reduce() {
+        return this.reduceFunc;
     }
 
-    /**
-     * To get the reduce function
-     * @return 
-     */
-    public String getReduceFunc() {
-        return reduceFunc;
+    @Override
+    public boolean hasReduce() {
+       return this.hasReduceFunc;
     }
     
 }
