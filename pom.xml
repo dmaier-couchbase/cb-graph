@@ -23,13 +23,19 @@
         </dependency>
         <dependency>
             <groupId>com.couchbase.client</groupId>
-            <artifactId>couchbase-client</artifactId>
-            <version>1.4.7</version>
+            <artifactId>java-client</artifactId>
+            <version>2.1.3</version>
         </dependency>
-         <dependency>
-            <groupId>com.googlecode.json-simple</groupId>
-            <artifactId>json-simple</artifactId>
-            <version>1.1.1</version>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.10</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.0</version>
         </dependency>
     </dependencies>
     
@@ -40,6 +46,7 @@
                 <includes>
                     <include>couchbase.properties</include>
                     <include>graph.properties</include>
+                    <include>test.properties</include>
                 </includes>
             </resource>
             <resource>
@@ -47,9 +54,50 @@
                 <targetPath>resources</targetPath>
                 <includes>
                     <include>func_map_all_edges.js</include>
+                    <include>func_map_all_edge_props.js</include>
+                    <include>func_map_all_edge_labels.js</include>
                     <include>func_map_all_vertices.js</include>
+                    <include>func_map_all_vertices.js</include>
+                    <include>func_map_all_vertex_props.js</include>
                 </includes>
             </resource>
         </resources>
+        
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.18.1</version>
+                <configuration>
+                    <skipTests>false</skipTests>
+                </configuration>
+            </plugin>
+        
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>fully.qualified.MainClass</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id> <!-- this is used for inheritance merges -->
+                        <phase>package</phase> <!-- bind to the packaging phase -->
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        
+        
+        
+        </plugins>
     </build>
 </project>
