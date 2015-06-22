@@ -16,15 +16,15 @@
 
 package com.couchbase.graph;
 
-import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.graph.helper.JSONHelper;
+import com.couchbase.client.java.Bucket;
+import com.couchbase.graph.conn.ConnectionFactory;
+import com.couchbase.graph.test.checker.DebugEnabledChecker;
 import com.couchbase.graph.test.annotation.RunIf;
-import com.couchbase.graph.test.checker.GraphEnabledChecker;
 import com.couchbase.graph.test.runner.JUnitExtRunner;
+import com.tinkerpop.blueprints.Direction;
+import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
-import java.util.Map;
-import static org.junit.Assert.*;
+import com.tinkerpop.blueprints.Vertex;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,41 +34,46 @@ import org.junit.runner.RunWith;
  * @author David Maier <david.maier at couchbase.com>
  */
 @RunWith(JUnitExtRunner.class)
-public class CBElementTest {
+public class CBGraphDebugTest {
     
     /**
      * The graph instance to test
      */
     private static Graph graph;
     
-    /**
-     * Flush the test bucket and delete the views before running the tests
-     * 
-     * @throws Exception 
-     */
+    
     @BeforeClass
-    public static void setUpClass() throws Exception {
-
+    @RunIf(value = DebugEnabledChecker.class)
+    public static void setUpClass() {
+    
+        Bucket bucket = ConnectionFactory.getBucketCon();
+        
+        //Init the graph
+        graph = new CBGraph();
+    
     }
-    
-    /**
-     * Purpose of this test is to make sure that the 
-     */
+   
+   /**
+    * Investigate why it does not work to get the Edge via the browser tool
+    */
     @Test
-    @RunIf(value = GraphEnabledChecker.class)
-    public void testToString() {
+    @RunIf(value = DebugEnabledChecker.class)
+    public void testGetEdgesFromVertex() {
     
-        System.out.println("-- testToString");
-        
-        String in = "{\"edges\":{\"in\":{},\"out\":{}},\"type\":\"vertex\",\"props\":{\"city\":\"Springfield\",\"last_name\":\"Simpson\",\"first_name\":\"Bart\",\"is_student\":true,\"age\":8}}";
-  
-        JsonObject obj =  JsonObject.fromJson(in);
-        
-        System.out.println(in);
-        
+        //Get the edge back
+        Vertex v_tae_bart2 = graph.getVertex("tae_bart");
 
-        //TODO: Add assertion
-        System.out.println( JSONHelper.sort(obj));
-        
+        if (v_tae_bart2 != null) {
+
+            Iterable<Edge> edges = v_tae_bart2.getEdges(Direction.OUT, "son of");
+
+            for (Edge edge : edges) {
+
+                System.out.println("eid = " + edge.getId());
+
+            }
+
+        }
+    
     }
 }

@@ -15,8 +15,11 @@ package com.couchbase.graph;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import com.couchbase.client.CouchbaseClient;
-import com.couchbase.graph.con.ConnectionFactory;
+import com.couchbase.client.java.Bucket;
+import com.couchbase.graph.conn.ConnectionFactory;
+import com.couchbase.graph.test.annotation.RunIf;
+import com.couchbase.graph.test.checker.GraphEnabledChecker;
+import com.couchbase.graph.test.runner.JUnitExtRunner;
 import com.couchbase.graph.views.ViewManager;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
@@ -25,16 +28,18 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.After;
 import org.junit.AfterClass;
+import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import static org.junit.Assert.*;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * To test the stuff
  * 
  * @author David Maier <david.maier at couchbase.com>
  */
+@RunWith(JUnitExtRunner.class)
 public class CBGraphTest {
     
     /**
@@ -48,11 +53,12 @@ public class CBGraphTest {
      * @throws java.lang.Exception
      */
     @BeforeClass
+    @RunIf(value = GraphEnabledChecker.class)
     public static void setUpClass() throws Exception {
         
         //Flush the bucket and wait until the operation is successful
-        CouchbaseClient client = ConnectionFactory.getClient();
-        assertTrue(client.flush().get());
+        Bucket client = ConnectionFactory.getBucketCon();
+        assertTrue(client.bucketManager().flush());
         assertTrue(ViewManager.deleteDesignDoc());
         
         //Init the graph
@@ -76,6 +82,7 @@ public class CBGraphTest {
      * @throws Exception 
      */
     @Test
+    @RunIf(value = GraphEnabledChecker.class)
     public void testGetFeatures() throws Exception
     {
         boolean isPersistent = graph.getFeatures().isPersistent;
@@ -86,7 +93,8 @@ public class CBGraphTest {
     /**
      * To test to add a vertex without Id
      */
-    //@Test
+    @Test
+    @RunIf(value = GraphEnabledChecker.class)
     public void testAddVertexWoId()
     {
         System.out.println("-- testAddVertexWoId");
@@ -113,15 +121,15 @@ public class CBGraphTest {
         
         //Check if an empty vertex was generated in the bucket
         System.out.println("- Check if an empty vertex object was created");
-        String json = v0.toString();
-        System.out.println("json = " + json);
-        assertEquals("{\"edges\":{\"in\":{},\"out\":{}},\"type\":\"vertex\",\"props\":{}}", json);    
+        String str = v0.toString();
+        assertEquals("{edges={in={}, out={}}, props={}, type=vertex}", str);    
     }
     
     /**
      * To add a vertex with properties
      */
     @Test
+    @RunIf(value = GraphEnabledChecker.class)
     public void testAddVertexWithProps()
     {
         System.out.println("-- testAddVertexWithProps");
@@ -137,8 +145,8 @@ public class CBGraphTest {
         Vertex tavwp_bart_2 = graph.getVertex("tavwp_bart");
         
         System.out.println(tavwp_bart_2.getId() + " = " + tavwp_bart_2.toString());
-        assertEquals("{\"edges\":{\"in\":{},\"out\":{}},\"type\":\"vertex\",\"props\":{\"city\":\"Springfield\",\"last_name\":\"Simpson\",\"first_name\":\"Bart\",\"is_student\":true,\"age\":8}}", tavwp_bart.toString());
-        assertEquals("{\"edges\":{\"in\":{},\"out\":{}},\"type\":\"vertex\",\"props\":{\"city\":\"Springfield\",\"last_name\":\"Simpson\",\"first_name\":\"Bart\",\"is_student\":true,\"age\":8}}", tavwp_bart_2.toString());
+        assertEquals("{edges={in={}, out={}}, props={age=8, city=Springfield, first_name=Bart, is_student=true, last_name=Simpson}, type=vertex}", tavwp_bart.toString());
+        assertEquals("{edges={in={}, out={}}, props={age=8, city=Springfield, first_name=Bart, is_student=true, last_name=Simpson}, type=vertex}", tavwp_bart_2.toString());
     }
     
     
@@ -146,6 +154,7 @@ public class CBGraphTest {
      * To test to add a vertex with a given id
      */
     @Test
+    @RunIf(value = GraphEnabledChecker.class)
     public void testAddVertexWithId()
     {
         System.out.println("-- testAddVertexWithId");
@@ -161,13 +170,13 @@ public class CBGraphTest {
         assertEquals("xyz", id );
         assertEquals("v_xyz", key);
         
-        String json = v_xyz.toString();
-        System.out.println("json = " + json);
-        assertEquals("{\"edges\":{\"in\":{},\"out\":{}},\"type\":\"vertex\",\"props\":{}}", json);    
+        String str = v_xyz.toString();
+        assertEquals("{edges={in={}, out={}}, props={}, type=vertex}", str);    
     }
     
     
     @Test
+    @RunIf(value = GraphEnabledChecker.class)
     public void testGetVertex()
     {
         System.out.println("-- testGetVertex");
@@ -187,30 +196,26 @@ public class CBGraphTest {
      * To get all vertices
      */
     @Test
+    @RunIf(value = GraphEnabledChecker.class)
     public void testGetVertices() throws Exception
     {
         System.out.println("-- testGetVertices");
         
         //First add ten vertices
-        final String PREFIX = "tgv_";
+        final String PREFIX = "tgvs_";
         final int NUM_OF_VERTICES = 10;
-        final long WAIT_UNTIL_INDEXED = 5000;
-        
         
         for (int i = 0; i < NUM_OF_VERTICES; i++) {
 
            graph.addVertex(PREFIX + i);
         
         }
-        
-        //Views are updated asynchrounously and so it may take moment until the
-        //the vertices are indexed
-        Thread.sleep(WAIT_UNTIL_INDEXED);
-        
+              
         List<String> keys = new ArrayList<>();
         
         Iterable<Vertex> vertices = graph.getVertices();
-        
+       
+ 
         int i = 0;
         
         for (Vertex vertex : vertices) {
@@ -231,6 +236,7 @@ public class CBGraphTest {
      * Test to add an edge between 2 vertices
      */
     @Test
+    @RunIf(value = GraphEnabledChecker.class)
     public void testAddEdgeWoId()
     {
          System.out.println("-- testAddEdgeWoId");
@@ -248,28 +254,29 @@ public class CBGraphTest {
          //Check if the edge objects where created correctly
          System.out.println(e_1.getId() + " = " + e_1); 
          assertEquals("tae_bart->|son of|->tae_homer",e_1.getId().toString()); 
-         assertEquals("{\"to\":\"v_tae_homer\",\"label\":\"son of\",\"from\":\"v_tae_bart\",\"type\":\"edge\"}", e_1.toString());
+         assertEquals("{from=v_tae_bart, label=son of, props={}, to=v_tae_homer, type=edge}", e_1.toString());
         
          System.out.println(e_2.getId() + " = " + e_2.toString());
          assertEquals("tae_bart->|son of|->tae_march", e_2.getId().toString());
-         assertEquals("{\"to\":\"v_tae_march\",\"label\":\"son of\",\"from\":\"v_tae_bart\",\"type\":\"edge\"}", e_2.toString());
+         assertEquals("{from=v_tae_bart, label=son of, props={}, to=v_tae_march, type=edge}", e_2.toString());
          
          //Check if the vertices were updated correctly
          System.out.println("v_tae_bart = " + v_tae_bart.toString());
-         assertEquals("{\"edges\":{\"in\":{},\"out\":{\"son of\":[\"e_tae_bart->|son of|->tae_homer\",\"e_tae_bart->|son of|->tae_march\"]}},\"type\":\"vertex\",\"props\":{}}", v_tae_bart.toString());
+         assertEquals("{edges={in={}, out={son of=[e_tae_bart->|son of|->tae_homer, e_tae_bart->|son of|->tae_march]}}, props={}, type=vertex}", v_tae_bart.toString());
          
          System.out.println("v_tae_homer = " + v_tae_homer.toString());
-         assertEquals("{\"edges\":{\"in\":{\"son of\":[\"e_tae_bart->|son of|->tae_homer\"]},\"out\":{}},\"type\":\"vertex\",\"props\":{}}", v_tae_homer.toString());
+         assertEquals("{edges={in={son of=[e_tae_bart->|son of|->tae_homer]}, out={}}, props={}, type=vertex}", v_tae_homer.toString());
         
          System.out.println("v_tae_march = " + v_tae_march.toString());
-         assertEquals("{\"edges\":{\"in\":{\"son of\":[\"e_tae_bart->|son of|->tae_march\"]},\"out\":{}},\"type\":\"vertex\",\"props\":{}}", v_tae_march.toString());
-         
+         assertEquals("{edges={in={son of=[e_tae_bart->|son of|->tae_march]}, out={}}, props={}, type=vertex}", v_tae_march.toString());
+          
     }
     
     /**
      * Test to add an edge with id, the id should be ignored
      */
     @Test
+    @RunIf(value = GraphEnabledChecker.class)
     public void testAddEdgeWithId()
     {
          System.out.println("-- testAddEdgeWithId");
@@ -280,19 +287,38 @@ public class CBGraphTest {
          Vertex v_tae_barney = graph.addVertex("tae_barney");
          
          System.out.println("- Add an edge via the Graph instance between Moe and Barney");
-         Edge e_1 = graph.addEdge("e_1", v_tae_barney, v_tae_moe, "guest of");
+         Edge e_1 = graph.addEdge("1", v_tae_barney, v_tae_moe, "guest of");
          
          System.out.println(e_1.getId());
          
-         //Expecting that the id 'e_1' is ignored and overridden by auto generated one
          System.out.println("e_1 = " + e_1.getId());
-         assertEquals("tae_barney->|guest of|->tae_moe", e_1.getId().toString()); 
+         assertEquals("1", e_1.getId().toString()); 
          
          //Check if the vertices have attached the incoming and outgoing edges
          System.out.println("v_tae_moe = " + v_tae_moe.toString());
-         assertEquals("{\"edges\":{\"in\":{\"guest of\":[\"e_tae_barney->|guest of|->tae_moe\"]},\"out\":{}},\"type\":\"vertex\",\"props\":{}}", v_tae_moe.toString());
+         assertEquals("{edges={in={guest of=[e_1]}, out={}}, props={}, type=vertex}", v_tae_moe.toString());
                 
          System.out.println("v_tae_barney = " + v_tae_barney.toString());
-         assertEquals("{\"edges\":{\"in\":{},\"out\":{\"guest of\":[\"e_tae_barney->|guest of|->tae_moe\"]}},\"type\":\"vertex\",\"props\":{}}", v_tae_barney.toString());        
+         assertEquals("{edges={in={}, out={guest of=[e_1]}}, props={}, type=vertex}", v_tae_barney.toString());        
+    }
+    
+    
+    @Test
+    @RunIf(value = GraphEnabledChecker.class)
+    public void testAddEdgeWithProps()
+    {
+         System.out.println("-- testAddEdgeWithProps");
+                
+         System.out.println("- Create 2 vertices");
+         
+         Vertex v_taewp_moe = graph.addVertex("taewp_moe");
+         Vertex v_taewp_barney = graph.addVertex("taewp_barney");
+         
+         Edge e_taewp = graph.addEdge("taewp", v_taewp_moe, v_taewp_barney, "guest of");
+         e_taewp.setProperty("bill", 1234);
+         
+         System.out.println("e_taewp = " + e_taewp.toString());
+         assertEquals("{from=v_taewp_moe, label=guest of, props={bill=1234}, to=v_taewp_barney, type=edge}", e_taewp.toString()); 
+         
     }
 }

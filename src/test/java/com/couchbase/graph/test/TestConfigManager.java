@@ -14,38 +14,35 @@
  * limitations under the License.
  */
 
-package com.couchbase.graph.views;
+package com.couchbase.graph.test;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import com.couchbase.graph.cfg.*;
+import com.couchbase.graph.error.ResourceReadException;
+import java.util.logging.Logger;
 
 /**
- *
+ * This class helps to access the existing configurations
+ * 
  * @author David Maier <david.maier at couchbase.com>
  */
-public class ViewDefTest {
+public class TestConfigManager {
+   
+    private static final Logger LOG = Logger.getLogger(TestConfigManager.class.getName());
+    private static TestConfig testConfig;
     
     
-    private static final String ALL_EDGES = 
-
-            "function map(doc, meta)\n" +
-            "{\n" +
-            "    if ( doc.type === \"edge\" )\n" +
-            "    {\n" +
-            "        emit(meta.id, null);\n" +
-            "    }\n" +
-            "}";
-    
-    
-    @Test
-    public void testReadAllEdgesViewDef() {
-    
-        AllEdgesViewDef allEdgesViewDef = new AllEdgesViewDef();
+    public static TestConfig getTestConfig() {
         
-        String mapFunc = allEdgesViewDef.getMapFunc();
+        if (testConfig == null) try {
+            
+            testConfig = new TestConfig();
         
-        System.out.println(mapFunc);
-        assertEquals(true, mapFunc.contains(ALL_EDGES));
-
+        } catch (ResourceReadException ex) {
+        
+            LOG.severe(ex.toString());
+        }
+        
+        return testConfig;
     }
+
 }

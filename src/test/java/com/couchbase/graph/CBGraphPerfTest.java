@@ -15,8 +15,11 @@ package com.couchbase.graph;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import com.couchbase.client.CouchbaseClient;
-import com.couchbase.graph.con.ConnectionFactory;
+import com.couchbase.client.java.Bucket;
+import com.couchbase.graph.conn.ConnectionFactory;
+import com.couchbase.graph.test.annotation.RunIf;
+import com.couchbase.graph.test.checker.PerfEnabledChecker;
+import com.couchbase.graph.test.runner.JUnitExtRunner;
 import com.couchbase.graph.views.ViewManager;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Graph;
@@ -25,16 +28,18 @@ import java.util.UUID;
 import org.apache.commons.lang.time.StopWatch;
 import org.junit.After;
 import org.junit.AfterClass;
+import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import static org.junit.Assert.*;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * To test the stuff
  * 
  * @author David Maier <david.maier at couchbase.com>
  */
+@RunWith(JUnitExtRunner.class)
 public class CBGraphPerfTest {
     
     /**
@@ -48,11 +53,12 @@ public class CBGraphPerfTest {
      * @throws java.lang.Exception
      */
     @BeforeClass
+    @RunIf(value = PerfEnabledChecker.class)
     public static void setUpClass() throws Exception {
         
         //Flush the bucket and wait until the operation is successful
-        CouchbaseClient client = ConnectionFactory.getClient();
-        assertTrue(client.flush().get());
+        Bucket client = ConnectionFactory.getBucketCon();
+        assertTrue(client.bucketManager().flush());
         assertTrue(ViewManager.deleteDesignDoc());
       
         //Init the graph
@@ -75,6 +81,7 @@ public class CBGraphPerfTest {
      * To add 1000 vertices
      */
     @Test
+    @RunIf(value = PerfEnabledChecker.class)
     public void testAdd1000Vertices()
     {
         System.out.println("-- testAdd1000Vertices");
@@ -104,14 +111,13 @@ public class CBGraphPerfTest {
         
         System.out.println("- Proof that the last one was added");
         Vertex v = graph.getVertex(uuids[uuids.length-1]);
-        String json = v.toString();
-        System.out.println("json = " + json);
-        assertEquals("{\"edges\":{\"in\":{},\"out\":{}},\"type\":\"vertex\",\"props\":{}}", json);
+        assertNotNull(v);
         
     }
     
     
-    //@Test
+    @Test
+    @RunIf(value = PerfEnabledChecker.class)
     public void testCreateBinaryTreeWithDepthOf10()
     {
         
