@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.couchbase.graph.test;
+package com.couchbase.graph.deps;
 
 import com.couchbase.graph.cfg.BaseConfig;
 import com.couchbase.graph.error.ResourceReadException;

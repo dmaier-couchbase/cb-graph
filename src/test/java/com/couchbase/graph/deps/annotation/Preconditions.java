@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-package com.couchbase.graph.test;
+package com.couchbase.graph.deps.annotation;
+
+import com.couchbase.graph.deps.IPrecondition;
 
 /**
  *
  * @author David Maier <david.maier at couchbase.com>
  */
-public interface IChecker {
-    public boolean satisfy();
+@java.lang.annotation.Retention(value = java.lang.annotation.RetentionPolicy.RUNTIME)
+@java.lang.annotation.Target(value = {java.lang.annotation.ElementType.METHOD})
+public @interface Preconditions {
+    Class<? extends IPrecondition>[] value() default {};
 }

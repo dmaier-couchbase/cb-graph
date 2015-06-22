@@ -14,16 +14,21 @@
  * limitations under the License.
  */
 
-package com.couchbase.graph.test.annotation;
+package com.couchbase.graph.deps.checker;
 
-import com.couchbase.graph.test.IPrecondition;
+import com.couchbase.graph.deps.TestConfigManager;
+import com.couchbase.graph.deps.IChecker;
 
 /**
  *
  * @author David Maier <david.maier at couchbase.com>
  */
-@java.lang.annotation.Retention(value = java.lang.annotation.RetentionPolicy.RUNTIME)
-@java.lang.annotation.Target(value = {java.lang.annotation.ElementType.METHOD})
-public @interface Preconditions {
-    Class<? extends IPrecondition>[] value() default {};
+public class DebugEnabledChecker implements IChecker {
+
+    @Override
+    public boolean satisfy() {
+
+        return TestConfigManager.getTestConfig().isDebugEnabled();
+    }
+    
 }

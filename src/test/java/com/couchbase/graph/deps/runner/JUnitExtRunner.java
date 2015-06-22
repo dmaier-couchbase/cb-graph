@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.couchbase.graph.test.runner;
+package com.couchbase.graph.deps.runner;
 
-import com.couchbase.graph.test.annotation.Context;
-import com.couchbase.graph.test.IChecker;
-import com.couchbase.graph.test.IPrecondition;
-import com.couchbase.graph.test.annotation.Preconditions;
-import com.couchbase.graph.test.annotation.RunIf;
+import com.couchbase.graph.deps.annotation.Context;
+import com.couchbase.graph.deps.IChecker;
+import com.couchbase.graph.deps.IPrecondition;
+import com.couchbase.graph.deps.annotation.Preconditions;
+import com.couchbase.graph.deps.annotation.RunIf;
 import org.junit.internal.runners.InitializationError;
 import org.junit.internal.runners.JUnit4ClassRunner;
 import org.junit.internal.runners.TestMethod;

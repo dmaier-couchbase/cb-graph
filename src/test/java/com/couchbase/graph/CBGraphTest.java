@@ -17,9 +17,9 @@ package com.couchbase.graph;
  */
 import com.couchbase.client.java.Bucket;
 import com.couchbase.graph.conn.ConnectionFactory;
-import com.couchbase.graph.test.annotation.RunIf;
-import com.couchbase.graph.test.checker.GraphEnabledChecker;
-import com.couchbase.graph.test.runner.JUnitExtRunner;
+import com.couchbase.graph.deps.annotation.RunIf;
+import com.couchbase.graph.deps.checker.GraphEnabledChecker;
+import com.couchbase.graph.deps.runner.JUnitExtRunner;
 import com.couchbase.graph.views.ViewManager;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;

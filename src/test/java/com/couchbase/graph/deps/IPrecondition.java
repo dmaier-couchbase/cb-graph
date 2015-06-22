@@ -14,20 +14,13 @@
  * limitations under the License.
  */
 
-package com.couchbase.graph.test.checker;
-
-import com.couchbase.graph.test.IChecker;
-import com.couchbase.graph.test.TestConfigManager;
+package com.couchbase.graph.deps;
 
 /**
  *
  * @author David Maier <david.maier at couchbase.com>
  */
-public class GraphEnabledChecker implements IChecker {
-
-    @Override
-    public boolean satisfy() {
-     
-        return TestConfigManager.getTestConfig().isGraphEnabled();
-    }  
+public interface IPrecondition {
+    void setup();
+    void teardown();
 }

@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package com.couchbase.graph.test;
+package com.couchbase.graph.deps;
 
 /**
  *
  * @author David Maier <david.maier at couchbase.com>
  */
-public interface IPrecondition {
-    void setup();
-    void teardown();
+public interface IChecker {
+    public boolean satisfy();
 }

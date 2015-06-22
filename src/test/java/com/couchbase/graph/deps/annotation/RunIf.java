@@ -14,22 +14,23 @@
  * limitations under the License.
  */
 
-package com.couchbase.graph.test.checker;
-
-import com.couchbase.graph.test.IChecker;
-import com.couchbase.graph.test.TestConfigManager;
+package com.couchbase.graph.deps.annotation;
 
 /**
  *
  * @author David Maier <david.maier at couchbase.com>
  */
-public class PerfEnabledChecker implements IChecker {
+import com.couchbase.graph.deps.IChecker;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-    @Override
-    public boolean satisfy() {
 
-        return TestConfigManager.getTestConfig().isPerformanceEnabled();
-        
-    }
+@java.lang.annotation.Retention(value = RUNTIME)
+@java.lang.annotation.Target(value = {METHOD, TYPE})
+public @interface RunIf {
+   
+    Class<? extends IChecker> value();
 
+    String[] arguments() default {};
 }

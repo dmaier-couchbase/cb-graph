@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.couchbase.graph.test.annotation;
+package com.couchbase.graph.deps.annotation;
 
 /**
  *
