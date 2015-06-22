@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.couchbase.graph.tinkerpop;
+package com.couchbase.graph.tinkerpop.deps;
 
 
 import junit.framework.TestCase;

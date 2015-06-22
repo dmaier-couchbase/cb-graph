@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.couchbase.graph.tinkerpop;
+package com.couchbase.graph.tinkerpop.deps;
 
 import com.couchbase.client.java.Bucket;
 import com.couchbase.graph.CBGraph;

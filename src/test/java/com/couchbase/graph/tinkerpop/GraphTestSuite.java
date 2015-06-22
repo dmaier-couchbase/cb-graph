@@ -16,6 +16,9 @@
 
 package com.couchbase.graph.tinkerpop;
 
+import com.couchbase.graph.tinkerpop.deps.TestSuite;
+import com.couchbase.graph.tinkerpop.deps.BaseTest;
+import com.couchbase.graph.tinkerpop.deps.GraphTest;
 import com.tinkerpop.blueprints.*;
 import java.util.ArrayList;
 import java.util.Date;

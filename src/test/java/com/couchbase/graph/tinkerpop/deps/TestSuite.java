@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-package com.couchbase.graph.tinkerpop;
+package com.couchbase.graph.tinkerpop.deps;
 
 
+import com.couchbase.graph.tinkerpop.deps.GraphTest;
+import com.couchbase.graph.tinkerpop.deps.BaseTest;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 import java.util.Collection;

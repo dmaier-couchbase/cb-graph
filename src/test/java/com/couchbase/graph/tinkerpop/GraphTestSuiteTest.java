@@ -16,6 +16,8 @@
 
 package com.couchbase.graph.tinkerpop;
 
+import com.couchbase.graph.tinkerpop.deps.CBGraphTestEnv;
+import com.couchbase.graph.tinkerpop.deps.GraphTest;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.graph.CBGraph;
 import com.couchbase.graph.conn.ConnectionFactory;
