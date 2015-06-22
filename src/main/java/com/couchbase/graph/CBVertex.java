@@ -22,6 +22,7 @@ import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.graph.error.DocNotFoundException;
 import com.couchbase.graph.error.IdGenException;
 import com.couchbase.graph.helper.JSONHelper;
+import com.couchbase.graph.views.ViewManager;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
@@ -29,6 +30,7 @@ import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.VertexQuery;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -118,6 +120,9 @@ public final class CBVertex extends CBElement implements Vertex {
         //The result as List        
         List<Edge> result = new ArrayList<>();
        
+        //If no label is given then get the edges for all labels
+        if (labels.length == 0) labels = ViewManager.queryAllEdgeLabels().toArray(new String[]{});
+        
         try
         { 
             this.refresh();
@@ -338,15 +343,22 @@ public final class CBVertex extends CBElement implements Vertex {
 
             if (drctn.equals(Direction.OUT) || drctn.equals(Direction.BOTH)) {
                 JsonArray labeldOutEdges = innerOutgoingEdges.getArray(label);
+                labeldOutEdges = JSONHelper.remove(labeldOutEdges, edgeKey);  
                 
-                JSONHelper.remove(labeldOutEdges, edgeKey);
-                
+                if (labeldOutEdges.size() != 0)
+                    innerOutgoingEdges.put(label, labeldOutEdges);
+                else
+                    innerOutgoingEdges.removeKey(label);
             }
 
             if (drctn.equals(Direction.IN) || drctn.equals(Direction.BOTH)) {
                 JsonArray labeledInEdges = innerIncomingEdges.getArray(label);
+                labeledInEdges = JSONHelper.remove(labeledInEdges, edgeKey);
                 
-                JSONHelper.remove(labeledInEdges, edgeKey);
+                if (labeledInEdges.size() != 0)
+                    innerIncomingEdges.put(label, labeledInEdges);
+                else
+                    innerIncomingEdges.removeKey(label);
             }
 
             client.replace(JsonDocument.create(cbKey, innerObj));

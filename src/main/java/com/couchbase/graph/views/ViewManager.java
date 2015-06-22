@@ -22,10 +22,13 @@ import com.couchbase.client.java.view.Stale;
 import com.couchbase.client.java.view.View;
 import com.couchbase.client.java.view.ViewQuery;
 import com.couchbase.client.java.view.ViewResult;
+import com.couchbase.client.java.view.ViewRow;
 import com.couchbase.graph.cfg.ConfigManager;
 import com.couchbase.graph.conn.ConnectionFactory;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -279,9 +282,21 @@ public class ViewManager {
      * Queries all edge labels
      * @return 
      */
-    public static ViewResult queryAllEdgeLabels()
+    public static Set<String> queryAllEdgeLabels()
     {
-        return query(DESIGN_DOC, getAllEdgeLabelsViewDef().name(), null, null);
+        Set<String> result = new HashSet<>();
+        
+        ViewResult queryResult = query(DESIGN_DOC, getAllEdgeLabelsViewDef().name(), null, null);
+        
+        for (ViewRow viewRow : queryResult) {
+                
+            String label = viewRow.key().toString();
+            
+            result.add(label);
+            
+        }
+        
+        return result;
     }
     
     /**

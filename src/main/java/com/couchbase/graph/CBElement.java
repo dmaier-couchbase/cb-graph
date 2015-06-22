@@ -229,12 +229,13 @@ public class CBElement implements Element {
         try {
             
             refresh();
-            Object removed = innerProps.removeKey(key);
+            Object toRemove = innerProps.get(key);
+            JsonObject removed = innerProps.removeKey(key);
             
             if (removed != null)
             {
                 client.replace(JsonDocument.create(cbKey, innerObj));
-                return (T) removed;
+                return (T) toRemove;
             }
             
             

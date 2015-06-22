@@ -69,7 +69,6 @@ public class ViewDef implements View {
     {
         this(name, mapFuncName);
         
-        //TODO: Classpath Resource instead File Resource because otherwise the resource is not available as soon as bundled
         this.reduceFunc = FileResourceManager.getFileResource(reduceFuncName).toString();
         this.hasReduceFunc = true;
     }

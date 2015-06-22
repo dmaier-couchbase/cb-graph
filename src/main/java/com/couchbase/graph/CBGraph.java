@@ -59,6 +59,12 @@ public class CBGraph implements Graph {
      * The client to use to connect to the Couchbase cluster
      */
     private final Bucket client;
+    
+    /**
+     * Provides the information if the Graph is closed, multiple Graphs can share
+     * one connection so we don't close the underlying connection
+     */
+    private boolean closed;
 
     /**
      * The default connector
@@ -71,8 +77,11 @@ public class CBGraph implements Graph {
         //Init the client connection
         this.client = ConnectionFactory.getBucketCon();
         
+        //The Graph is per default open
+        this.closed = false;
+        
         //Init the views
-        if (ConfigManager.getCbConfig().isViewAutoCreateEnabled()) ViewManager.createViews();
+        if (ConfigManager.getCbConfig().isViewAutoCreateEnabled() && !ViewManager.designDocExists()) ViewManager.createViews();
     }
     
     
@@ -414,7 +423,17 @@ public class CBGraph implements Graph {
      */
     @Override
     public void shutdown() {
-       
-        client.close();
+      
+        this.closed = true;
     }
+
+    /**
+     * Get the status if the Graph was shutdown
+     * @return 
+     */
+    public boolean isClosed() {
+        return closed;
+    }
+    
+    
 }
