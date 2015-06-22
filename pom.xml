@@ -32,11 +32,6 @@
             <version>4.10</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-collections4</artifactId>
-            <version>4.0</version>
-        </dependency>
     </dependencies>
     
     <build>
