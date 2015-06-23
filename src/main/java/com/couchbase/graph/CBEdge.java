@@ -16,11 +16,20 @@
 
 package com.couchbase.graph;
 
+import static com.couchbase.graph.views.ViewManager.*;
+import com.couchbase.client.java.view.ViewResult;
+import com.couchbase.client.java.view.ViewRow;
 import com.couchbase.graph.error.DocNotFoundException;
+import com.couchbase.graph.views.ViewManager;
+import com.sun.javafx.scene.control.skin.VirtualFlow;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -255,4 +264,98 @@ public final class CBEdge extends CBElement implements Edge {
         
         return result;
     }
+    
+    
+    /**
+     * Queries all edge labels
+     * @return 
+     */
+    public static Set<String> queryAllEdgeLabels()
+    {
+        Set<String> result = new HashSet<>();
+        
+        ViewResult queryResult = ViewManager.query(DESIGN_DOC, getAllEdgeLabelsViewDef().name(), null, null);
+        
+        for (ViewRow viewRow : queryResult) {
+                
+            String label = viewRow.key().toString();
+            
+            result.add(label);
+            
+        }
+        
+        return result;
+    }
+    
+    
+    /**
+     * Queries for a specific edge label
+     * @param label
+     * @param graph
+     * @return 
+     * @throws com.couchbase.graph.error.DocNotFoundException 
+     */
+    public static List<Edge> queryByEdgeLabel(String label, Graph graph) throws DocNotFoundException
+    {
+        List<Edge> result = new ArrayList<>();
+        
+        ViewResult viewResult = ViewManager.query(DESIGN_DOC, getAllEdgeLabelsViewDef().name(), label, null);
+        
+        for (ViewRow viewRow : viewResult) {
+            
+            result.add(new CBEdge(viewRow.id(), graph));
+        }
+        
+        return result;
+        
+    }
+    
+     /**
+     * Queries all edges
+     * 
+     * @param graph
+     * @return 
+     * @throws com.couchbase.graph.error.DocNotFoundException 
+     */
+    public static List<Edge> queryAllEdges(Graph graph) throws DocNotFoundException
+    {
+       
+        List<Edge> result = new ArrayList<>();
+         
+        ViewResult viewResult = ViewManager.query(DESIGN_DOC, getAllEdgesViewDef().name(), null, null);
+        
+        
+        for (ViewRow viewRow : viewResult) {
+            
+            result.add(new CBEdge(viewRow.id(), graph));
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Queries all edge properties
+     * 
+     * @param key
+     * @param value
+     * @return 
+     */
+    public static List<Edge> queryByEdgeProp(String key, String value, Graph graph) throws DocNotFoundException
+    { 
+        List<Edge> result = new ArrayList<>();
+        
+        ViewResult viewResult = ViewManager.query(DESIGN_DOC, getAllVertexPropsViewDef().name(), genCompKey(key, value), genCompKey(key, value));
+        
+        for (ViewRow viewRow : viewResult) {
+            
+            result.add(new CBEdge(viewRow.id(), graph));
+        }
+        
+        return result;
+         
+         
+    }
+    
+    
+     
 }

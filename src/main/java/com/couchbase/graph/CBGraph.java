@@ -186,31 +186,16 @@ public class CBGraph implements Graph {
     @Override
     public Iterable<Vertex> getVertices() {
         
-        List<Vertex> result = new ArrayList<>();
-       
-        ViewResult queryResult = ViewManager.queryAllVertices();
-        
-        for (ViewRow v : queryResult) {
-
-            String currKey = v.key().toString();
-            String currId = v.id();
+        try {
             
-            LOG.log(Level.FINEST,"(id, key) = " + "({0}, {1})", new Object[]{currId, currKey});
+            return CBVertex.queryAllVertices(this);
             
-            try
-            {
-                Vertex currV = new CBVertex(currKey, this);
-
-                result.add(currV);
-            }
-            catch (DocNotFoundException e)
-            {
-                LOG.severe(e.toString());
-            }
+        } catch (DocNotFoundException ex) {
             
+            LOG.log(Level.SEVERE, "Could not get all vertices: {0}", ex.getMessage());
         }
         
-        return result;
+        return null;
     }
 
     /**
@@ -222,31 +207,16 @@ public class CBGraph implements Graph {
     @Override
     public Iterable<Vertex> getVertices(String key, Object value) {
      
-        List<Vertex> result = new ArrayList<>();
-      
-        ViewResult queryResult = ViewManager.queryAllVertexProps(key, value.toString());
-        
-        for (ViewRow v : queryResult) 
+        try
         {
-            String currKey = v.key().toString();
-            String currId = v.id();
-            
-            LOG.log(Level.FINEST,"(id, key) = " + "({0}, {1})", new Object[]{currId, currKey});
-            
-            try
-            {
-                Vertex currV = new CBVertex(currKey, this);
+           return CBVertex.queryByVertexProp(key, value.toString(), this);
+        }
+        catch (DocNotFoundException ex)
+        {
+            LOG.log(Level.SEVERE, "Could not get the vertices by property: {0}", ex.getMessage());
+        }
 
-                result.add(currV);
-            }
-            catch (DocNotFoundException e)
-            {
-                LOG.severe(e.toString());
-            }
-            
-        }   
-         
-        return result;
+        return null;
     }
 
     /**
@@ -357,24 +327,16 @@ public class CBGraph implements Graph {
     @Override
     public Iterable<Edge> getEdges() {
         
-        List<Edge> result = new ArrayList<>();
-        
-        ViewResult queryResult = ViewManager.queryAllEdges();
-        
-        for (ViewRow v : queryResult) {
-            
-            try {
-            
-                result.add(new CBEdge(v.id(), this));
-            
-            } catch (DocNotFoundException e) {
-                
-                LOG.severe(e.toString());
-            }
-            
+        try
+        {
+            return CBEdge.queryAllEdges(this);
+        }
+        catch (DocNotFoundException ex)
+        {
+            LOG.log(Level.SEVERE, "Could not get the edges: {0}", ex.getMessage());
         }
         
-        return result;
+        return null;
     }
 
     /**
@@ -387,24 +349,17 @@ public class CBGraph implements Graph {
     @Override
     public Iterable<Edge> getEdges(String key, Object value) {
         
-        List<Edge> result = new ArrayList<>();
         
-        ViewResult queryResult = ViewManager.queryAllEdgeProps(key, value.toString());
-        
-        for (ViewRow viewRow : queryResult) {
-        
-            try {
+        try {
             
-                result.add(new CBEdge(viewRow.id(),this));
+            return CBEdge.queryByEdgeProp(key, value.toString(), this);
+         
+        } catch (DocNotFoundException ex) {
             
-            } catch (DocNotFoundException e) {
-                
-                LOG.severe(e.toString());
-            }
+            LOG.log(Level.SEVERE, "Could not get the edges by property: {0}", ex.getMessage());
         }
         
-         
-        return result;
+        return null;
     }
 
     /**

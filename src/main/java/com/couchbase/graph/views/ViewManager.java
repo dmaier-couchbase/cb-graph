@@ -22,13 +22,10 @@ import com.couchbase.client.java.view.Stale;
 import com.couchbase.client.java.view.View;
 import com.couchbase.client.java.view.ViewQuery;
 import com.couchbase.client.java.view.ViewResult;
-import com.couchbase.client.java.view.ViewRow;
 import com.couchbase.graph.cfg.ConfigManager;
 import com.couchbase.graph.conn.ConnectionFactory;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -125,11 +122,8 @@ public class ViewManager {
     public static boolean designDocExists(String name)
     {
        DesignDocument designDoc = null;   
-       
        designDoc = client.bucketManager().getDesignDocument(name);
-       if (designDoc != null) return true;
-     
-        return false;
+       return designDoc != null;
     }
     
     /**
@@ -238,7 +232,7 @@ public class ViewManager {
      */
     public static ViewResult query(String designDocName, String viewName, String startKey, String endKey)
     {
-        ViewResult result = null;
+        ViewResult result;
         
         //Perform the query
         ViewQuery query = ViewQuery.from(designDocName, viewName).inclusiveEnd(true).stale(Stale.FALSE);
@@ -259,96 +253,13 @@ public class ViewManager {
     }
     
     /**
-     * Queries all edges
-     * 
-     * @return 
-     */
-    public static ViewResult queryAllEdges()
-    {
-        return query(DESIGN_DOC, getAllEdgesViewDef().name(), null, null);
-    }
-    
-    /**
-     * Queries all vertices
-     * 
-     * @return 
-     */
-    public static ViewResult queryAllVertices()
-    {
-        return query(DESIGN_DOC, getAllVerticesViewDef().name(), null, null);
-    }
-    
-    /**
-     * Queries all edge labels
-     * @return 
-     */
-    public static Set<String> queryAllEdgeLabels()
-    {
-        Set<String> result = new HashSet<>();
-        
-        ViewResult queryResult = query(DESIGN_DOC, getAllEdgeLabelsViewDef().name(), null, null);
-        
-        for (ViewRow viewRow : queryResult) {
-                
-            String label = viewRow.key().toString();
-            
-            result.add(label);
-            
-        }
-        
-        return result;
-    }
-    
-    /**
-     * Queries for a specific edge label
-     * @param label
-     * @return 
-     */
-    public static ViewResult queryAllEdgeLabels(String label)
-    {
-        return query(DESIGN_DOC, getAllEdgeLabelsViewDef().name(), label, null);
-    }
-    
-    /**
-     * Queries all vertex properties
-     * @return 
-     */
-    public static ViewResult queryAllVertexProps()
-    {
-        return query(DESIGN_DOC, getAllVertexPropsViewDef().name(),null, null);
-    }
-    
-    /**
-     * Queries all edge properties
-     * 
-     * @param key
-     * @param value
-     * @return 
-     */
-    public static ViewResult queryAllEdgeProps(String key, String value)
-    {
-        return query(DESIGN_DOC, getAllVertexPropsViewDef().name(), genCompKey(key, value), genCompKey(key, value));
-    }
-    
-    /**
-     * Queries for a specific property
-     * @param key
-     * @param value
-     * @return 
-     */
-    public static ViewResult queryAllVertexProps(String key, String value)
-    {
-        return query(DESIGN_DOC, getAllVertexPropsViewDef().name(),genCompKey(key, value), genCompKey(key, value));
-    }
-    
-    /**
      * To generate a compound key from a KV-pair
      * 
      * @param key
      * @param value
      * @return 
      */
-    private static String genCompKey(String key, String value)
+    public static String genCompKey(String key, String value)
     {
         return "[" + key + "," + value + "]";
     }

@@ -62,6 +62,7 @@ public class GraphTestSuiteTest {
         suite.testAddingVerticesAndEdges();
         suite.testAutotypingOfProperties();
         suite.testConcurrentModification();
+        suite.testConnectivityPatterns();
         
     }
 }

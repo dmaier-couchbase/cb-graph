@@ -16,9 +16,12 @@
 
 package com.couchbase.graph;
 
+import static com.couchbase.graph.views.ViewManager.*;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.view.ViewResult;
+import com.couchbase.client.java.view.ViewRow;
 import com.couchbase.graph.error.DocNotFoundException;
 import com.couchbase.graph.error.IdGenException;
 import com.couchbase.graph.helper.JSONHelper;
@@ -30,7 +33,6 @@ import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.VertexQuery;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -121,7 +123,7 @@ public final class CBVertex extends CBElement implements Vertex {
         List<Edge> result = new ArrayList<>();
        
         //If no label is given then get the edges for all labels
-        if (labels.length == 0) labels = ViewManager.queryAllEdgeLabels().toArray(new String[]{});
+        if (labels.length == 0) labels = CBEdge.queryAllEdgeLabels().toArray(new String[]{});
         
         try
         { 
@@ -479,4 +481,52 @@ public final class CBVertex extends CBElement implements Vertex {
     {
         return vKey.substring(CBModel.VERTEX_PREFIX.length());
     }
+    
+    
+     /**
+     * Queries all vertices
+     * 
+     * @param graph
+     * @return 
+     * @throws com.couchbase.graph.error.DocNotFoundException 
+     */
+    public static List<Vertex> queryAllVertices(Graph graph) throws DocNotFoundException
+    {
+        List<Vertex> result = new ArrayList<>();
+                
+        
+        ViewResult viewResult = ViewManager.query(DESIGN_DOC, getAllVerticesViewDef().name(), null, null);
+        
+        for (ViewRow viewRow : viewResult) {
+            
+            result.add(new CBVertex(viewRow.id(), graph));
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Queries for a specific property
+     * @param key
+     * @param value
+     * @param graph
+     * @return 
+     * @throws com.couchbase.graph.error.DocNotFoundException 
+     */
+    public static List<Vertex> queryByVertexProp(String key, String value, Graph graph) throws DocNotFoundException
+    {
+        List<Vertex> result = new ArrayList<>();
+        
+        ViewResult viewResult = ViewManager.query(DESIGN_DOC, getAllVertexPropsViewDef().name(),genCompKey(key, value), genCompKey(key, value));
+        
+        for (ViewRow viewRow : viewResult) {
+            
+            result.add(new CBVertex(viewRow.id(), graph));
+        }
+        
+        return result;
+        
+    }
+    
+   
 }
