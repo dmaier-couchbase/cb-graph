@@ -113,10 +113,10 @@ public final class CBEdge extends CBElement implements Edge {
             if (drctn.equals(Direction.IN) || drctn.equals(Direction.OUT))
             {
                 if (drctn.equals(Direction.IN))
-                    return new CBVertex(innerFrom, graph);
+                    return new CBVertex(innerTo, graph);
             
                 if (drctn.equals(Direction.OUT))
-                    return new CBVertex(innerTo, graph);
+                    return new CBVertex(innerFrom, graph);
             }
             else
             {
@@ -182,8 +182,8 @@ public final class CBEdge extends CBElement implements Edge {
         
             
             //Get the vertices of the edge
-            CBVertex vSource = (CBVertex) this.getVertex(Direction.IN);
-            CBVertex vTarget = (CBVertex) this.getVertex(Direction.OUT);
+            CBVertex vSource = (CBVertex) this.getVertex(Direction.OUT);
+            CBVertex vTarget = (CBVertex) this.getVertex(Direction.IN);
             
             //Remove the edge from it
             vSource.removeEdgeFromAdjacencyList(this.innerLabel, cbKey, Direction.OUT);
@@ -344,7 +344,7 @@ public final class CBEdge extends CBElement implements Edge {
     { 
         List<Edge> result = new ArrayList<>();
         
-        ViewResult viewResult = ViewManager.query(DESIGN_DOC, getAllVertexPropsViewDef().name(), genCompKey(key, value), genCompKey(key, value));
+        ViewResult viewResult = ViewManager.query(DESIGN_DOC, getAllEdgePropsViewDef().name(), genCompKey(key, value), genCompKey(key, value));
         
         for (ViewRow viewRow : viewResult) {
             

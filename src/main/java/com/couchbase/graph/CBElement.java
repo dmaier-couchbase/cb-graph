@@ -18,6 +18,7 @@ package com.couchbase.graph;
 
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.graph.cfg.ConfigManager;
 import com.couchbase.graph.conn.ConnectionFactory;
@@ -26,6 +27,7 @@ import com.couchbase.graph.helper.JSONHelper;
 import com.tinkerpop.blueprints.Element;
 import com.tinkerpop.blueprints.Graph;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -207,7 +209,8 @@ public class CBElement implements Element {
        
         try {
             refresh();
-            innerProps.put(key, value);      
+            
+            innerProps.put(key, value);  
             client.replace(JsonDocument.create(cbKey, innerObj));
            
         } catch (DocNotFoundException e) {

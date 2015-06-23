@@ -84,9 +84,9 @@ public class GraphTestSuite extends TestSuite {
         final Object id = a.getId();
         final Vertex b = graph.getVertex(id);
         final Vertex c = graph.getVertex(id.toString());
-        assertEquals(a, b);
-        assertEquals(b, c);
-        assertEquals(c, a);
+        assertEquals(a.toString(), b.toString());
+        assertEquals(b.toString(), c.toString());
+        assertEquals(c.toString(), a.toString());
         graph.shutdown();
     }
 
@@ -140,8 +140,8 @@ public class GraphTestSuite extends TestSuite {
                 assertEquals(count(graph.getVertices("location", "everywhere")), 2);
                 assertEquals(count(graph.getVertices("name", "marko")), 1);
                 assertEquals(count(graph.getVertices("name", "stephen")), 1);
-                assertEquals(getOnlyElement(graph.getVertices("name", "marko")), v1);
-                assertEquals(getOnlyElement(graph.getVertices("name", "stephen")), v2);
+                assertEquals(getOnlyElement(graph.getVertices("name", "marko")).toString(), v1.toString());
+                assertEquals(getOnlyElement(graph.getVertices("name", "stephen")).toString(), v2.toString());
             }
         }
 
@@ -157,8 +157,8 @@ public class GraphTestSuite extends TestSuite {
                 assertEquals(count(graph.getEdges("location", "everywhere")), 2);
                 assertEquals(count(graph.getEdges("name", "marko")), 1);
                 assertEquals(count(graph.getEdges("name", "stephen")), 1);
-                assertEquals(graph.getEdges("name", "marko").iterator().next(), e1);
-                assertEquals(graph.getEdges("name", "stephen").iterator().next(), e2);
+                assertEquals(graph.getEdges("name", "marko").iterator().next().toString(), e1.toString());
+                assertEquals(graph.getEdges("name", "stephen").iterator().next().toString(), e2.toString());
             }
         }
         graph.shutdown();
@@ -204,8 +204,11 @@ public class GraphTestSuite extends TestSuite {
         if (graph.getFeatures().supportsEdgeProperties) {
             Vertex a = graph.addVertex(null);
             Vertex b = graph.addVertex(null);
+           
             graph.addEdge(null, a, b, graphTest.convertLabel("knows"));
-            graph.addEdge(null, a, b, graphTest.convertLabel("knows"));
+            
+            //Our Graph does not support duplicated edges
+            graph.addEdge(null, b, b, graphTest.convertLabel("knows"));
             for (Edge edge : b.getEdges(Direction.IN)) {
                 edge.setProperty("key", "value");
             }
@@ -336,10 +339,10 @@ public class GraphTestSuite extends TestSuite {
         if (graph.getFeatures().supportsEdgeIteration)
             assertEquals(count(graph.getEdges()), 1);
 
-        assertEquals(v.getEdges(Direction.OUT).iterator().next().getVertex(Direction.IN), u);
-        assertEquals(u.getEdges(Direction.IN).iterator().next().getVertex(Direction.OUT), v);
-        assertEquals(v.getEdges(Direction.OUT).iterator().next(), e);
-        assertEquals(u.getEdges(Direction.IN).iterator().next(), e);
+        assertEquals(v.getEdges(Direction.OUT).iterator().next().getVertex(Direction.IN).toString(), u.toString());
+        assertEquals(u.getEdges(Direction.IN).iterator().next().getVertex(Direction.OUT).toString(), v.toString());
+        assertEquals(v.getEdges(Direction.OUT).iterator().next().toString(), e.toString());
+        assertEquals(u.getEdges(Direction.IN).iterator().next().toString(), e.toString());
         graph.removeVertex(v);
 
         //TODO: DEX

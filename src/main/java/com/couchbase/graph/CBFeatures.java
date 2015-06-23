@@ -43,8 +43,8 @@ public class CBFeatures extends Features {
         this.supportsVertexIteration = true;
         this.supportsVertexProperties = true;
         
-        //Indexing -- Disabled for now, but basically possible
-        this.supportsEdgeIndex = false; //To index on edge properties on demand
+        //Indexing -- Disabled for now, but will be possible with N1QL
+        this.supportsEdgeIndex = false;
         this.supportsEdgeKeyIndex = false;
         this.supportsIndices = false;
         this.supportsKeyIndices = false;
@@ -54,18 +54,23 @@ public class CBFeatures extends Features {
         //Transactions -- The Graph will be distributed, so Transactions are not the focus
         this.supportsThreadedTransactions = false;
         this.supportsTransactions = false;
+        this.supportsThreadIsolatedTransactions = false;
         
-        //Data types
+        //Data types -- Natively supported by our client library without any conversion
+        this.supportsStringProperty = true;
         this.supportsBooleanProperty = true;
         this.supportsDoubleProperty = true;
-        this.supportsFloatProperty = true;
         this.supportsIntegerProperty = true;
         this.supportsLongProperty = true;
-        this.supportsMapProperty = true;
-        this.supportsMixedListProperty = true;
-        this.supportsPrimitiveArrayProperty = true;
+        
+        // -- These are not natively supported by the client library and need
+        //    additonal conversion (e.g. Array <-> JsonArray, List <-> JsonArray, float <-> double)
+        // TODO: Add the mapping for these data types
+        this.supportsFloatProperty = false;
+        this.supportsMapProperty = false;
+        this.supportsMixedListProperty = false;
+        this.supportsPrimitiveArrayProperty = false;
         this.supportsSerializableObjectProperty = false;
-        this.supportsStringProperty = true;
-        this.supportsUniformListProperty = true;
+        this.supportsUniformListProperty = false;
     }
 }

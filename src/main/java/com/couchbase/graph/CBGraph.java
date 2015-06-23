@@ -389,6 +389,12 @@ public class CBGraph implements Graph {
     public boolean isClosed() {
         return closed;
     }
+
+    @Override
+    public String toString() {
+        return CBGraph.class.getSimpleName().toLowerCase();
+    }
+    
     
     
 }

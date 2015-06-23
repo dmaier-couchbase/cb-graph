@@ -53,16 +53,39 @@ public class GraphTestSuiteTest {
 
     @Test
     @RunIf(value = GraphEnabledChecker.class)
-    public void testRunTestSuite()
+    public void testRunTestSuite() throws Exception
     {
         GraphTest testEnv = new CBGraphTestEnv();
         GraphTestSuite suite = new GraphTestSuite(testEnv);
-        
         
         suite.testAddingVerticesAndEdges();
         suite.testAutotypingOfProperties();
         suite.testConcurrentModification();
         suite.testConnectivityPatterns();
+        suite.testDataTypeValidationOnProperties();
+        suite.testEmptyOnConstruction();
+        suite.testFeatureCompliance();
+        suite.testGettingVerticesAndEdgesWithKeyValue();
         
-    }
+        //Negative test
+        try
+        {
+            suite.testRemoveNonExistentVertexCausesException();
+            assertTrue(false);
+        
+        }
+        catch (Exception e)
+        {
+            assertTrue(true);
+        }
+        
+        suite.testRemovingEdges();
+        suite.testRemovingVertices();
+        suite.testSemanticallyCorrectIterables();
+        
+        suite.testSettingProperties();  
+        suite.testSimpleRemovingVerticesEdges();
+        suite.testStringRepresentation();
+        suite.testStringRepresentationOfVertexId();   
+    }   
 }

@@ -109,11 +109,11 @@ public class ConnectionFactory {
         String admpwd = cfg.getAdminPassword();
         
         LOG.info("Using the following configuration ...");
-        LOG.log(Level.FINE, "hosts = {0}", hosts);
-        LOG.log(Level.FINE, "port = {0}", port);
-        LOG.log(Level.FINE, "timeout = {0}", timeout);
-        LOG.log(Level.FINE, "bucket = {0}", bucket);
-        LOG.log(Level.FINE, "password = {0}", password);
+        LOG.log(Level.INFO, "hosts = {0}", hosts);
+        LOG.log(Level.INFO, "port = {0}", port);
+        LOG.log(Level.INFO, "timeout = {0}", timeout);
+        LOG.log(Level.INFO, "bucket = {0}", bucket);
+        LOG.log(Level.INFO, "password = {0}", password);
         
      
         CouchbaseEnvironment env = DefaultCouchbaseEnvironment.builder().kvTimeout(timeout).build();

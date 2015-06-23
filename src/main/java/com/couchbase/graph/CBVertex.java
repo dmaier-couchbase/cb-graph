@@ -132,21 +132,16 @@ public final class CBVertex extends CBElement implements Vertex {
             for (String label : labels) {
 
                 if (drctn.equals(Direction.IN) || drctn.equals(Direction.BOTH)) {
+                    
                     JsonArray labeledInEdges = innerIncomingEdges.getArray(label);
 
-                    for (Object eKey : labeledInEdges) {
-
-                        result.add(new CBEdge(eKey.toString(), graph));
-                    }
+                    result = edgesFromJsonArr(result, labeledInEdges, graph);
                 }
 
                 if (drctn.equals(Direction.OUT) || drctn.equals(Direction.BOTH)) {
                     JsonArray labeledOutEdges = innerOutgoingEdges.getArray(label);
 
-                    for (Object eKey : labeledOutEdges) {
-
-                        result.add(new CBEdge(eKey.toString(), graph));
-                    }
+                    result = edgesFromJsonArr(result, labeledOutEdges, graph);
                 }
 
             }
@@ -158,6 +153,27 @@ public final class CBVertex extends CBElement implements Vertex {
         }
         
         return result;
+    }
+    
+    /**
+     * Iterate over an edge array by returning a list of edges
+     * @param result
+     * @param edgeArr
+     * @param graph
+     * @return
+     * @throws DocNotFoundException 
+     */
+    private List<Edge> edgesFromJsonArr(List<Edge> result, JsonArray edgeArr, Graph graph) throws DocNotFoundException
+    {
+         if (edgeArr != null )
+         {
+            for (Object eKey : edgeArr) {
+
+                result.add(new CBEdge(eKey.toString(), graph));
+            }
+         }
+        
+         return result;
     }
     
     
@@ -175,11 +191,7 @@ public final class CBVertex extends CBElement implements Vertex {
              
                 JsonArray edgeArray = innerIncomingEdges.getArray(label);
                 
-                for (Object edgeKey : edgeArray)
-                {
-                    Edge edge = new CBEdge(edgeKey.toString(), graph);
-                    result.add(edge);
-                }
+                result = edgesFromJsonArr(result, edgeArray, graph);
                 
             }
             
@@ -190,11 +202,7 @@ public final class CBVertex extends CBElement implements Vertex {
              
                 JsonArray edgeArray = innerOutgoingEdges.getArray(label);
                 
-                for (Object edgeKey : edgeArray)
-                {
-                    Edge edge = new CBEdge(edgeKey.toString(), graph);
-                    result.add(edge);
-                }
+                result = edgesFromJsonArr(result, edgeArray, graph);
                 
             }
             
