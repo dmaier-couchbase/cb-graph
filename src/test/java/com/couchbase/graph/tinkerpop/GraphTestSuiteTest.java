@@ -21,8 +21,6 @@ import com.couchbase.graph.tinkerpop.deps.GraphTest;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.graph.CBGraph;
 import com.couchbase.graph.conn.ConnectionFactory;
-import com.couchbase.graph.deps.annotation.RunIf;
-import com.couchbase.graph.deps.checker.GraphEnabledChecker;
 import com.couchbase.graph.views.ViewManager;
 import com.tinkerpop.blueprints.Graph;
 import org.junit.BeforeClass;
@@ -39,7 +37,6 @@ public class GraphTestSuiteTest {
     
     
     @BeforeClass
-    @RunIf(value = GraphEnabledChecker.class)
     public static void setUpClass() throws InterruptedException {
         
         //Flush the bucket and wait until the operation is successful
@@ -52,7 +49,6 @@ public class GraphTestSuiteTest {
     
 
     @Test
-    @RunIf(value = GraphEnabledChecker.class)
     public void testRunTestSuite() throws Exception
     {
         GraphTest testEnv = new CBGraphTestEnv();
