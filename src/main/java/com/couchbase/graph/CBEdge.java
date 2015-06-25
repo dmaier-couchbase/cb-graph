@@ -21,7 +21,6 @@ import com.couchbase.client.java.view.ViewResult;
 import com.couchbase.client.java.view.ViewRow;
 import com.couchbase.graph.error.DocNotFoundException;
 import com.couchbase.graph.views.ViewManager;
-import com.sun.javafx.scene.control.skin.VirtualFlow;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;

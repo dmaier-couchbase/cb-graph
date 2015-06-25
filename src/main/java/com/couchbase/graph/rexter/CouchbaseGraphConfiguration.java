@@ -1,4 +1,4 @@
-package com.couchbase.graph.util;
+package com.couchbase.graph.rexter;
 import com.couchbase.graph.CBGraph;
 
 import com.tinkerpop.blueprints.Graph;

@@ -32,6 +32,7 @@ import com.tinkerpop.blueprints.Features;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.GraphQuery;
 import com.tinkerpop.blueprints.Vertex;
+import com.tinkerpop.blueprints.util.DefaultGraphQuery;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -370,7 +371,7 @@ public class CBGraph implements Graph {
     @Override
     public GraphQuery query() {
         
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return new DefaultGraphQuery(this);
     }
 
     /**
