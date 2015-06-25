@@ -31,6 +31,7 @@ import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.VertexQuery;
+import com.tinkerpop.blueprints.util.DefaultVertexQuery;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -277,7 +278,8 @@ public final class CBVertex extends CBElement implements Vertex {
      */
     @Override
     public VertexQuery query() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        
+        return new DefaultVertexQuery(this);
     }
 
     /**
