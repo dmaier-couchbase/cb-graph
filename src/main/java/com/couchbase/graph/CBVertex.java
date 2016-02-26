@@ -35,7 +35,9 @@ import com.tinkerpop.blueprints.util.DefaultVertexQuery;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.lang.time.StopWatch;
 
 /**
  * The implementation of an Vertex
@@ -166,6 +168,9 @@ public final class CBVertex extends CBElement implements Vertex {
      */
     private List<Edge> edgesFromJsonArr(List<Edge> result, JsonArray edgeArr, Graph graph) throws DocNotFoundException
     {
+        StopWatch sw = new StopWatch();
+        sw.start();
+        
          if (edgeArr != null )
          {
             for (Object eKey : edgeArr) {
@@ -174,6 +179,10 @@ public final class CBVertex extends CBElement implements Vertex {
             }
          }
         
+         sw.stop();
+         
+         LOG.log(Level.FINEST, "Time to get edges: {0}", sw.getTime());
+         
          return result;
     }
     
@@ -238,6 +247,9 @@ public final class CBVertex extends CBElement implements Vertex {
             for (Edge e : edges) {
                 
                 if (drctn.equals(Direction.OUT) || drctn.equals(Direction.IN)) {
+                    
+                    //TODO: Is it necessary to invert the direction?
+                    //result.add(e.getVertex(invertDirection(drctn)));
                     result.add(e.getVertex(drctn));
                 }
 
@@ -271,6 +283,15 @@ public final class CBVertex extends CBElement implements Vertex {
         return result;
     }
 
+    public Direction invertDirection(Direction dir) {
+        
+        if (dir.equals(Direction.IN)) return Direction.OUT;
+        if (dir.equals(Direction.OUT)) return Direction.IN;
+        
+        return Direction.BOTH;
+    }
+    
+    
     /**
      * Not yet supported, because we ignore Indexing for now
      * 
