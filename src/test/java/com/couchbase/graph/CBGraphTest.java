@@ -21,9 +21,11 @@ import com.couchbase.graph.deps.annotation.RunIf;
 import com.couchbase.graph.deps.checker.GraphEnabledChecker;
 import com.couchbase.graph.deps.runner.JUnitExtRunner;
 import com.couchbase.graph.views.ViewManager;
+import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
+import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.After;
@@ -320,5 +322,62 @@ public class CBGraphTest {
          System.out.println("e_taewp = " + e_taewp.toString());
          assertEquals("{from=v_taewp_moe, label=guest of, props={bill=1234}, to=v_taewp_barney, type=edge}", e_taewp.toString()); 
          
+    }
+    
+    @Test
+    public void testGetVertexEdges() {
+        
+        System.out.println("-- testGetVertexEdges");
+        
+         //Reference graph
+         TinkerGraph tg = new TinkerGraph();
+        
+         Vertex t_tge_moe = tg.addVertex("tge_moe");
+         Vertex t_tge_barney = tg.addVertex("tge_barney");
+         tg.addEdge(null, t_tge_moe, t_tge_barney, "guest_of");
+         
+         Vertex cb_tge_moe = graph.addVertex("tge_moe");
+         Vertex cb_tge_barney = graph.addVertex("tge_barney");
+         graph.addEdge(null, cb_tge_moe, cb_tge_barney, "guest_of");
+         
+         Iterable<Edge> t_e = t_tge_moe.getEdges(Direction.OUT, "guest_of");
+         assertEquals("tge_moe",t_e.iterator().next().getVertex(Direction.OUT).getId().toString());
+         assertEquals("tge_barney",t_e.iterator().next().getVertex(Direction.IN).getId().toString());
+         
+         Iterable<Edge> cb_e =  cb_tge_moe.getEdges(Direction.OUT, "guest_of");
+         assertEquals("tge_moe",cb_e.iterator().next().getVertex(Direction.OUT).getId().toString());
+         assertEquals("tge_barney",cb_e.iterator().next().getVertex(Direction.IN).getId().toString());
+        
+    }
+    
+    @Test
+    public void testGetVertexVertices() {
+        
+         System.out.println("-- testGetVertexVertices");
+        
+         //Reference graph
+         TinkerGraph tg = new TinkerGraph();
+        
+         Vertex t_tgvv_moe = tg.addVertex("tgvv_moe");
+         Vertex t_tgvv_barney = tg.addVertex("tgvv_barney");
+         tg.addEdge(null, t_tgvv_moe, t_tgvv_barney, "guest_of");
+         
+         Vertex cb_tgvv_moe = graph.addVertex("tgvv_moe");
+         Vertex cb_tgvv_barney = graph.addVertex("tgvv_barney");
+         graph.addEdge(null, cb_tgvv_moe, cb_tgvv_barney, "guest_of");
+         
+         Iterable<Vertex> t_v = t_tgvv_moe.getVertices(Direction.OUT, "guest_of");
+         assertEquals("tgvv_barney", t_v.iterator().next().getId().toString());
+         Iterable<Vertex> t_v2 = t_tgvv_barney.getVertices(Direction.IN, "guest_of");
+         assertEquals("tgvv_moe", t_v2.iterator().next().getId().toString());
+         Iterable<Vertex> t_v3 = t_tgvv_moe.getVertices(Direction.BOTH, "guest_of");
+         assertEquals("tgvv_barney", t_v3.iterator().next().getId().toString());
+         
+         Iterable<Vertex> cb_v = cb_tgvv_moe.getVertices(Direction.OUT, "guest_of");
+         assertEquals("tgvv_barney", cb_v.iterator().next().getId().toString());
+         Iterable<Vertex> cb_v2 = cb_tgvv_barney.getVertices(Direction.IN, "guest_of");
+         assertEquals("tgvv_moe", cb_v2.iterator().next().getId().toString());
+         Iterable<Vertex> cb_v3 = cb_tgvv_moe.getVertices(Direction.BOTH, "guest_of");
+         assertEquals("tgvv_barney", cb_v3.iterator().next().getId().toString());
     }
 }
