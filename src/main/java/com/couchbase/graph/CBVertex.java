@@ -248,9 +248,7 @@ public final class CBVertex extends CBElement implements Vertex {
                 
                 if (drctn.equals(Direction.OUT) || drctn.equals(Direction.IN)) {
                     
-                    //TODO: Is it necessary to invert the direction?
-                    //result.add(e.getVertex(invertDirection(drctn)));
-                    result.add(e.getVertex(drctn));
+                    result.add(e.getVertex(invertDirection(drctn)));
                 }
 
                 //All edges those are connected to this node, to determine the connected
@@ -264,12 +262,13 @@ public final class CBVertex extends CBElement implements Vertex {
                     if (v_in.getId().equals(this.id) && v_out.getId().equals(this.id)) {
                         result.add(this);
                     } else {
-                        //Outgoing edge
+                        
+                        //Incoming edge
                         if (v_in.getId().equals(this.id)) {
                             result.add(v_out);
                         }
 
-                        //Incoming edge
+                        //Outgoing edge
                         if (v_out.getId().equals(this.id)) {
                             result.add(v_in);
                         }
