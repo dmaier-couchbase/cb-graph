@@ -79,7 +79,7 @@ public class GraphQueryTestSuite extends TestSuite {
             vertices = graph.query().has("age", Compare.GREATER_THAN_EQUAL, 29).vertices();
             assertEquals(count(vertices), 1);
             assertEquals(vertices.iterator().next().getProperty("name"), "marko");
-            assertEquals(vertices.iterator().next().getProperty("age"), 33);
+            assertEquals(vertices.iterator().next().getProperty("age"), Integer.valueOf(33));
 
             vertices = graph.query().has("age", Compare.GREATER_THAN_EQUAL, 28).vertices();
             assertEquals(count(vertices), 2);

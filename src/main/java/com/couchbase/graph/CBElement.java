@@ -99,6 +99,25 @@ public class CBElement implements Element {
     }
     
     /**
+     * The full constructor
+     * 
+     * @param id
+     * @param props
+     * @param graph 
+     */
+    public CBElement(Object id, JsonObject props, Graph graph) {
+        
+        this(id, graph);
+        this.innerObj = JsonObject.empty();
+        
+        if (props != null) {
+            
+            innerProps = props;
+            innerObj.put(CBModel.PROP_PROPS, innerProps);
+        }
+    }
+    
+    /**
      * To refresh the inner object instance, what happens during
      * a refresh depends on the refresh mode.
      * 

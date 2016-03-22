@@ -26,6 +26,8 @@ public interface CBModel {
     //Keys
     public static final String VERTEX_PREFIX = "v_";
     public static final String EDGE_PREFIX = "e_";
+    public static final String AL_PREFIX = "al_";
+    public static final String AL_KEY = AL_PREFIX + "{1}";
     public static final String VERTEX_KEY = VERTEX_PREFIX + "{1}";
     public static final String EDGE_DELIM = "->";
     public static final String EDGE_LABEL_DELIM = "|";

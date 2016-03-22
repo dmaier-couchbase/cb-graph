@@ -40,4 +40,8 @@ public class GraphConfig extends BaseConfig {
         return Boolean.parseBoolean(this.props.get("graph.compression.enabled").toString());
     }
     
+    public boolean isCompressedAsBinary() {
+        
+        return Boolean.parseBoolean(this.props.get("graph.compression.binary").toString());
+    }
 }

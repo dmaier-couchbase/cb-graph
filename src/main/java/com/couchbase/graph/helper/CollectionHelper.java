@@ -16,6 +16,8 @@
 
 package com.couchbase.graph.helper;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -76,6 +78,20 @@ public class CollectionHelper {
         }
         
         return out;
+    }
+    
+    /**
+     * Iterator to List
+     * @param <T>
+     * @param iter
+     * @return 
+     */
+    public static <T> List<T> copyIterator(Iterator<T> iter) {
+        
+        List<T> copy = new ArrayList<T>();
+        while (iter.hasNext())
+            copy.add(iter.next());
+        return copy;
     }
    
 }

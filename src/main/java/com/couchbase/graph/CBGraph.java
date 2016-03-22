@@ -16,10 +16,13 @@
 
 package com.couchbase.graph;
 
+import com.couchbase.client.deps.io.netty.buffer.Unpooled;
 import com.couchbase.client.java.Bucket;
+import com.couchbase.client.java.document.BinaryDocument;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.graph.cfg.ConfigManager;
+import com.couchbase.graph.cfg.GraphConfig;
 import com.couchbase.graph.conn.ConnectionFactory;
 import com.couchbase.graph.error.DocNotFoundException;
 import com.couchbase.graph.error.IdGenException;
@@ -124,13 +127,28 @@ public class CBGraph implements Graph {
             edges.put(CBModel.PROP_EDGES_IN, in);
             edges.put(CBModel.PROP_EDGES_OUT, out);
 
-            if (ConfigManager.getGraphConfig().isCompressionEnabled()) {
+            GraphConfig cfg = ConfigManager.getGraphConfig();
+            
+            //If the compression is enabled
+            if (cfg.isCompressionEnabled()) {
                 
-                String comprEdges = ZipHelper.comprBytesToString(
-                        ZipHelper.compress(edges.toString())
-                );
+                byte[] comprEdges = ZipHelper.compress(edges.toString());
                 
-                v.put(CBModel.PROP_EDGES, comprEdges);
+                //And if the compressed edges list should be stored as serialized string
+                if (!cfg.isCompressedAsBinary()) {
+                    
+                    String comprEdgesStr = ZipHelper.comprBytesToString(comprEdges);
+                    v.put(CBModel.PROP_EDGES, comprEdgesStr);
+                
+                } else {
+                    
+                    //Create an extra document for the adjacency list
+                    String alKey = CBVertex.genAdjacencyListKey(id);
+                    BinaryDocument al = BinaryDocument.create(alKey, Unpooled.copiedBuffer(comprEdges));
+                    client.insert(al);
+                    v.put(CBModel.PROP_EDGES, alKey);
+                    
+                }
                 
             } else {
                 

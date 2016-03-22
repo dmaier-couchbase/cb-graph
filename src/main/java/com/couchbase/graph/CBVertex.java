@@ -16,6 +16,9 @@
 
 package com.couchbase.graph;
 
+import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
+import com.couchbase.client.deps.io.netty.buffer.Unpooled;
+import com.couchbase.client.java.document.BinaryDocument;
 import static com.couchbase.graph.views.ViewManager.*;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
@@ -26,6 +29,7 @@ import com.couchbase.graph.cfg.ConfigManager;
 import com.couchbase.graph.cfg.GraphConfig;
 import com.couchbase.graph.error.DocNotFoundException;
 import com.couchbase.graph.error.IdGenException;
+import com.couchbase.graph.helper.CollectionHelper;
 import com.couchbase.graph.helper.JSONHelper;
 import com.couchbase.graph.helper.ZipHelper;
 import com.couchbase.graph.views.ViewManager;
@@ -35,12 +39,18 @@ import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.VertexQuery;
 import com.tinkerpop.blueprints.util.DefaultVertexQuery;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.event.ListSelectionEvent;
 import org.apache.commons.lang.time.StopWatch;
+import rx.Observable;
 
 /**
  * The implementation of an Vertex
@@ -178,13 +188,15 @@ public final class CBVertex extends CBElement implements Vertex {
     {
         StopWatch sw = new StopWatch();
         sw.start();
-        
+                
          if (edgeArr != null )
          {
-            for (Object eKey : edgeArr) {
-
-                result.add(new CBEdge(eKey.toString(), graph));
-            }
+             //Multi-get instead of multiple gets
+             Iterator<Edge>  it = Observable.from(edgeArr.toList())
+                    .flatMap(key -> client.async().get(key.toString()))
+                    .map(doc -> CBEdge.fromJson(doc.content(), graph)).toBlocking().getIterator();
+            
+             return CollectionHelper.copyIterator(it);
          }
         
          sw.stop();
@@ -416,6 +428,7 @@ public final class CBVertex extends CBElement implements Vertex {
      * returns the innerObj without doing the decompression.
      *
      * @return
+     * @throws com.couchbase.graph.helper.ZipHelper.CompressionException
      */
     public JsonObject compressEdges() throws ZipHelper.CompressionException {
 
@@ -423,11 +436,20 @@ public final class CBVertex extends CBElement implements Vertex {
 
         if (cfg.isCompressionEnabled()) {
 
-            String innerEdgesStr = ZipHelper.comprBytesToString(
-                    ZipHelper.compress(innerEdges.toString())
-            );
-
-            result.put(CBModel.PROP_EDGES, innerEdgesStr);
+            byte[] compr = ZipHelper.compress(innerEdges.toString());
+            
+            if (!cfg.isCompressedAsBinary()) {
+                
+                String innerEdgesStr = ZipHelper.comprBytesToString(compr);
+                result.put(CBModel.PROP_EDGES, innerEdgesStr);
+               
+            } else {
+             
+                String alKey = genAdjacencyListKey(id);
+                BinaryDocument al = BinaryDocument.create(alKey, Unpooled.copiedBuffer(compr));
+                client.upsert(al);
+                result.put(CBModel.PROP_EDGES, alKey);
+            }
         }
 
         return result;
@@ -442,20 +464,42 @@ public final class CBVertex extends CBElement implements Vertex {
      * @return
      * @throws com.couchbase.graph.helper.ZipHelper.DecompressionException
      */
-    public JsonObject decompressEdges() throws ZipHelper.DecompressionException {
+    public JsonObject decompressEdges() throws ZipHelper.DecompressionException, IOException {
 
-        JsonObject result = null;
+        JsonObject result;
 
         Object edgeLists = innerObj.get(CBModel.PROP_EDGES);
 
         if (cfg.isCompressionEnabled()) {
 
+            byte[] compr;
+            
             //The edge lists are then encoded as a string
-            String comprStr = (String) edgeLists;
-            byte[] compr = ZipHelper.comprStringToBytes(comprStr);
+            if (!cfg.isCompressedAsBinary()) {
+            
+                String comprStr = (String) edgeLists;
+                compr = ZipHelper.comprStringToBytes(comprStr);
 
-            String decomprStr = ZipHelper.decompress(compr);
-            result = JsonObject.fromJson(decomprStr);
+            }
+            else {
+                
+                BinaryDocument al = client.get((String) edgeLists,BinaryDocument.class);
+                ByteBuf buffer = al.content();
+                
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                
+                for (int i = 0; i < buffer.capacity(); i ++) {
+                    byte b = buffer.getByte(i);
+                    baos.write(b);
+                }
+                
+                baos.close();
+                
+                compr = baos.toByteArray();          
+            }
+            
+           String decompr = ZipHelper.decompress(compr);
+           result = JsonObject.fromJson(decompr);
 
         } else {
 
@@ -483,7 +527,7 @@ public final class CBVertex extends CBElement implements Vertex {
             
                 this.innerEdges =  decompressEdges();
             
-            } catch (ZipHelper.DecompressionException ex) {
+            } catch (ZipHelper.DecompressionException | IOException ex) {
                 
                 LOG.severe(ex.toString());
                 return false;                
@@ -527,11 +571,7 @@ public final class CBVertex extends CBElement implements Vertex {
         
         
         super.remove(); 
-    }
-
-    
-    
-    
+    }  
     
     /**
      * To generate the key of a vertex by using the next generated id
@@ -543,6 +583,18 @@ public final class CBVertex extends CBElement implements Vertex {
     {
             genVertexId();
             return CBModel.VERTEX_KEY.replace("{1}", String.valueOf(innerIdCounter));
+    }
+    
+    /**
+     * To generate the key of the adjacency list which belongs to this vertex
+     * 
+     * @return
+     * @throws IdGenException 
+     */
+    public static String genAdjacencyListKey() throws IdGenException
+    {
+        genVertexId();
+        return CBModel.AL_KEY.replace("{1}", String.valueOf(innerIdCounter));
     }
     
     /**
@@ -565,6 +617,7 @@ public final class CBVertex extends CBElement implements Vertex {
                
     }
     
+    
     /**
      * To generate the key based on the id of a vertex
      * 
@@ -576,6 +629,16 @@ public final class CBVertex extends CBElement implements Vertex {
           return CBModel.VERTEX_KEY.replace("{1}", id.toString());
     }
     
+    /**
+     * To generate the key of the adjacency list which belongs to this vertex
+     * 
+     * @param id
+     * @return 
+     */
+    public static String genAdjacencyListKey(Object id) {
+    
+        return CBModel.AL_KEY.replace("{1}", id.toString());
+    }
     
     /**
      * Returns the id of the vertex by parsing the key

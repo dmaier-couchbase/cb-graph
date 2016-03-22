@@ -16,6 +16,8 @@
 
 package com.couchbase.graph;
 
+import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonObject;
 import static com.couchbase.graph.views.ViewManager.*;
 import com.couchbase.client.java.view.ViewResult;
 import com.couchbase.client.java.view.ViewRow;
@@ -30,7 +32,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -65,13 +66,15 @@ public final class CBEdge extends CBElement implements Edge {
      * @param graph
      * @throws com.couchbase.graph.error.DocNotFoundException
     */
+   
     public CBEdge(Object vId1, Object vId2, Graph graph) throws DocNotFoundException {
         
         this(vId1, "", vId2, graph);
     }
-    
+   
+   
     /**
-    * The constructor of an edge which has a label
+     * The constructor of an edge which has a label
      * @param vId1
      * @param label
      * @param vId2
@@ -85,8 +88,63 @@ public final class CBEdge extends CBElement implements Edge {
         this.innerFrom = CBVertex.genVertexKey(vId1);
         this.innerLabel = label;
         this.innerTo = CBVertex.genVertexKey(vId2);
+        
         this.refresh();
     }
+    
+    /**
+     * The full constructor for initalizing a new edge
+     * 
+     * @param vId1
+     * @param label
+     * @param vId2
+     * @param props
+     * @param graph 
+     */
+    public CBEdge(Object vId1, String label, Object vId2, JsonObject props, Graph graph) {
+        
+        super(genEdgeId(vId1, label, vId2), props, graph);
+        
+        this.cbKey = genEdgeKey(vId1, label, vId2);
+        this.innerFrom = CBVertex.genVertexKey(vId1);
+        this.innerLabel = label;
+        this.innerTo = CBVertex.genVertexKey(vId2);
+        
+        this.innerObj.put(CBModel.PROP_TYPE, CBModel.VAL_TYPE_EDGE);
+        this.innerObj.put(CBModel.PROP_FROM, innerFrom);
+        this.innerObj.put(CBModel.PROP_LABEL, innerLabel);
+        this.innerObj.put(CBModel.PROP_TO, innerTo);
+    }
+    
+   
+    /**
+     * To convert a Json document into an edge
+     * 
+     * @param json
+     * @param graph
+     * @return 
+     */
+    public static Edge fromJson(JsonObject json, Graph graph) {
+
+        String from = CBVertex.parseVertexKey(json.getString(CBModel.PROP_FROM)).toString();
+
+        String label = json.getString(CBModel.PROP_LABEL);
+        if (label == null) label = "";
+        
+        
+        String to = CBVertex.parseVertexKey(json.getString(CBModel.PROP_TO)).toString();
+        
+        JsonObject props = json.getObject(CBModel.PROP_PROPS);
+        
+        if (from != null && to != null) {
+            
+            return new CBEdge(from, label, to, props, graph);
+        }
+        
+        //By default return null
+        return null;
+    }
+
     
     /**
      * To constructor of an edge by it's key value

@@ -23,6 +23,7 @@ import com.couchbase.graph.deps.annotation.RunIf;
 import com.couchbase.graph.deps.checker.GraphEnabledChecker;
 import com.couchbase.graph.deps.runner.JUnitExtRunner;
 import com.couchbase.graph.views.ViewManager;
+import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 import java.util.UUID;
@@ -72,19 +73,22 @@ public class CBVertexCompressionTest {
         if (!CFG.isCompressionEnabled()) {
         
             //Add a vertex and an edge
-            Vertex v = graph.addVertex("v_tuc");
-            Vertex v2 = graph.addVertex("v_2_tuc");
+            Vertex v = graph.addVertex("tuc");
+            Vertex v2 = graph.addVertex("2_tuc");
             v.addEdge("friend of", v2);
            
-            v = graph.getVertex("v_tuc");
-            v2 = graph.getVertex("v_2_tuc");
+            v = graph.getVertex("tuc");
+            v2 = graph.getVertex("2_tuc");
            
             System.out.println("v = " + v.toString());
             System.out.println("v2 = " + v2.toString());
             
-            assertEquals("{edges={in={}, out={friend of=[e_v_tuc->|friend of|->v_2_tuc]}}, props={}, type=vertex}", v.toString());
-            assertEquals("{edges={in={friend of=[e_v_tuc->|friend of|->v_2_tuc]}, out={}}, props={}, type=vertex}", v2.toString());
+            assertEquals("{edges={in={}, out={friend of=[e_tuc->|friend of|->2_tuc]}}, props={}, type=vertex}", v.toString());
+            assertEquals("{edges={in={friend of=[e_tuc->|friend of|->2_tuc]}, out={}}, props={}, type=vertex}", v2.toString());
         
+            assertEquals("2_tuc", v.getVertices(Direction.OUT, "friend of").iterator().next().getId().toString());
+            assertEquals("tuc", v2.getVertices(Direction.IN, "friend of").iterator().next().getId().toString());
+            
         } else {
             
             System.out.println("Skipping test because compression is enabled.");
@@ -102,15 +106,30 @@ public class CBVertexCompressionTest {
         if (CFG.isCompressionEnabled()) {
             
             //Add a vertex and an edge
-            Vertex v = graph.addVertex("v_tc");
-            Vertex v2 = graph.addVertex("v_2_tc");
+            Vertex v = graph.addVertex("tc");
+            Vertex v2 = graph.addVertex("2_tc");
             v.addEdge("friend of", v2);
            
-            v = graph.getVertex("v_tc");
-            v2 = graph.getVertex("v_2_tc");
+            v = graph.getVertex("tc");
+            v2 = graph.getVertex("2_tc");
            
             System.out.println("v = " + v.toString());
             System.out.println("v2 = " + v2.toString());
+            
+            if (CFG.isCompressedAsBinary()) {
+                
+                assertEquals("{edges=al_tc, props={}, type=vertex}", v.toString());
+                assertEquals("{edges=al_2_tc, props={}, type=vertex}", v2.toString());
+            }
+            else {
+                
+                assertEquals("{edges=H4sIAAAAAAAAAKtWysxTsqqu1VHKLy0BMpTSijJT81IU8tOUrKKVUuNLknXtauBiNbp2RkAhpdjaWgDtdyJ3OQAAAA==, props={}, type=vertex}",v.toString());
+                assertEquals("{edges=H4sIAAAAAAAAAKtWysxTsqpWSivKTM1LUchPU7KKVkqNL0nWtauBi9Xo2hkBhZRia3WU8ktLgOprawEXQcnwOQAAAA==, props={}, type=vertex}",v2.toString());
+            }
+            
+            
+            assertEquals("2_tc", v.getVertices(Direction.OUT, "friend of").iterator().next().getId().toString());
+            assertEquals("tc", v2.getVertices(Direction.IN, "friend of").iterator().next().getId().toString());
             
         } else {
    
@@ -119,8 +138,8 @@ public class CBVertexCompressionTest {
    
     }
     
-    @Test
-    @RunIf(value = GraphEnabledChecker.class)
+    //@Test
+    //@RunIf(value = GraphEnabledChecker.class)
     public void testCompressionImpactForSuperNode() {
         
         System.out.println("-- testCompressionImpactForSuperNode");

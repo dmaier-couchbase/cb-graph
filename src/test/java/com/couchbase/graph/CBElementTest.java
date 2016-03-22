@@ -16,15 +16,12 @@
 
 package com.couchbase.graph;
 
-import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.graph.helper.JSONHelper;
 import com.couchbase.graph.deps.annotation.RunIf;
 import com.couchbase.graph.deps.checker.GraphEnabledChecker;
 import com.couchbase.graph.deps.runner.JUnitExtRunner;
 import com.tinkerpop.blueprints.Graph;
-import java.util.Map;
-import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
