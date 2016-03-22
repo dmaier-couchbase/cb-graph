@@ -119,7 +119,8 @@ public class CBGraphPerfTest {
     @Test
     @RunIf(value = PerfEnabledChecker.class)
     public void testCreateBinaryTreeWithDepthOf10()
-    {
+    {   
+        System.out.println("-- testCreateBinaryTreeWithDepthOf10");
         
         //Create a root node
         String uuid = UUID.randomUUID().toString();
@@ -146,6 +147,48 @@ public class CBGraphPerfTest {
              root = left;
         }
         
+        sw.stop();
+        System.out.println("Traversed tree in " + sw.getTime() + " ms");
+    }
+    
+    @Test
+    @RunIf(value = PerfEnabledChecker.class)
+    public void traverse50KEdges()
+    {
+        System.out.println("-- traverse50KEdges");
+        
+        int COUNT = 1000;
+        String data = "123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790123456790";
+       
+        //Create a graph of neighbors and second neighbors
+        System.out.println("Creating graph ...");
+        
+        Vertex root = graph.addVertex(UUID.randomUUID().toString());
+        
+        for (int i = 0; i < COUNT; i++) {
+            
+            Vertex v = graph.addVertex(UUID.randomUUID().toString());
+            System.out.println("id = " +v.getId());  
+            v.setProperty("data", data);
+              
+            graph.addEdge(null, root, v, "neighbor of" );
+            
+        }
+        
+        //Traverse the graph
+         System.out.println("Traversing graph ..."); 
+        
+        StopWatch sw = new StopWatch();
+        sw.start();
+
+        Iterable<Vertex> vertices =  root.getVertices(Direction.OUT);
+        
+        for ( Vertex v : vertices) {
+
+            System.out.println(v.getId());
+
+        }
+
         sw.stop();
         System.out.println("Traversed tree in " + sw.getTime() + " ms");
     }

@@ -2,6 +2,9 @@
 
 This is an implementation of Tinkerpop's Graph API for Couchbase
 
+![alt tag](https://raw.github.com/dmaier-couchbase/cb-graph-viz/master/screenshot.png)
+
+
 ## Configuration
 
 You configure your Couchbase access by using a couchbase.properties file:
