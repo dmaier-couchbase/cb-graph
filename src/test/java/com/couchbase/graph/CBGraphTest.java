@@ -325,6 +325,7 @@ public class CBGraphTest {
     }
     
     @Test
+    @RunIf(value = GraphEnabledChecker.class)
     public void testGetVertexEdges() {
         
         System.out.println("-- testGetVertexEdges");
@@ -351,6 +352,7 @@ public class CBGraphTest {
     }
     
     @Test
+    @RunIf(value = GraphEnabledChecker.class)
     public void testGetVertexVertices() {
         
          System.out.println("-- testGetVertexVertices");
