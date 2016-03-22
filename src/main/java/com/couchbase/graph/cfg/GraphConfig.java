@@ -35,4 +35,9 @@ public class GraphConfig extends BaseConfig {
         return Boolean.parseBoolean(this.props.get("graph.refresh.mode").toString());
     }
     
+    public boolean isCompressionEnabled()
+    {
+        return Boolean.parseBoolean(this.props.get("graph.compression.enabled").toString());
+    }
+    
 }

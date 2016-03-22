@@ -15,15 +15,19 @@
  */
 package com.couchbase.graph.helper;
 
+import com.couchbase.client.deps.io.netty.handler.codec.bytes.ByteArrayEncoder;
 import com.couchbase.graph.error.ABaseException;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-import java.util.zip.ZipInputStream;
 
 /**
  * Helper which wraps java.util.zip functionality for de-/compression purposes.
@@ -60,6 +64,19 @@ public class ZipHelper {
           return "Could not compress the  string: " + inner.getMessage();
         }   
     }
+    
+    
+    public static String comprBytesToString(byte[] bytes) {
+     
+        return Base64.getEncoder().encodeToString(bytes);
+    }
+    
+    public static byte[] comprStringToBytes(String str)  {
+     
+        return Base64.getDecoder().decode(str);
+    }
+    
+    
     
     /**
      * Compress some text

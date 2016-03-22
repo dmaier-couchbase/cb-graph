@@ -22,9 +22,12 @@ import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.view.ViewResult;
 import com.couchbase.client.java.view.ViewRow;
+import com.couchbase.graph.cfg.ConfigManager;
+import com.couchbase.graph.cfg.GraphConfig;
 import com.couchbase.graph.error.DocNotFoundException;
 import com.couchbase.graph.error.IdGenException;
 import com.couchbase.graph.helper.JSONHelper;
+import com.couchbase.graph.helper.ZipHelper;
 import com.couchbase.graph.views.ViewManager;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
@@ -50,6 +53,11 @@ public final class CBVertex extends CBElement implements Vertex {
      * The logger
      */
     private static final Logger LOG = Logger.getLogger(CBVertex.class.getName());
+    
+    /**
+     * The associated Graph configuration
+     */
+    private GraphConfig cfg = ConfigManager.getGraphConfig();
     
     /**
      * The edges those are belonging to this vertex
@@ -322,7 +330,7 @@ public final class CBVertex extends CBElement implements Vertex {
      * @param edgeKey
      * @param drctn 
      */
-    public void addEdgeToAdjacencyList(String label, String edgeKey, Direction drctn)
+    public void addEdgeToAdjacencyList(String label, String edgeKey, Direction drctn) throws ZipHelper.CompressionException
     { 
         try {
             refresh();
@@ -354,7 +362,8 @@ public final class CBVertex extends CBElement implements Vertex {
                 labeledInEdges.add(edgeKey);
             }
 
-            client.replace(JsonDocument.create(cbKey, innerObj));
+            JsonObject toReplace = compressEdges();
+            client.replace(JsonDocument.create(cbKey, toReplace));
 
         } catch (DocNotFoundException e) {
             
@@ -368,7 +377,7 @@ public final class CBVertex extends CBElement implements Vertex {
      * @param edgeKey
      * @param drctn 
      */
-    public void removeEdgeFromAdjacencyList(String label, String edgeKey, Direction drctn)
+    public void removeEdgeFromAdjacencyList(String label, String edgeKey, Direction drctn) throws ZipHelper.CompressionException
     {
          try {
             refresh();
@@ -393,12 +402,69 @@ public final class CBVertex extends CBElement implements Vertex {
                     innerIncomingEdges.removeKey(label);
             }
 
-            client.replace(JsonDocument.create(cbKey, innerObj));
+            JsonObject toReplace = compressEdges();
+            client.replace(JsonDocument.create(cbKey, toReplace));
 
         } catch (DocNotFoundException e) {
             LOG.severe(e.toString());
         }
     }
+    
+    /**
+     * If compression enabled then the edge lists need to be compressed and
+     * stored as a string. If compression is disabled then this method just
+     * returns the innerObj without doing the decompression.
+     *
+     * @return
+     */
+    public JsonObject compressEdges() throws ZipHelper.CompressionException {
+
+        JsonObject result = innerObj;
+
+        if (cfg.isCompressionEnabled()) {
+
+            String innerEdgesStr = ZipHelper.comprBytesToString(
+                    ZipHelper.compress(innerEdges.toString())
+            );
+
+            result.put(CBModel.PROP_EDGES, innerEdgesStr);
+        }
+
+        return result;
+    }
+
+    
+    /**
+     * If compression is enabled then the edge lists are compressed and need to
+     * be decompressed before. If compression is disabled, then this method will
+     * just return the already decompressed edge list.
+     *
+     * @return
+     * @throws com.couchbase.graph.helper.ZipHelper.DecompressionException
+     */
+    public JsonObject decompressEdges() throws ZipHelper.DecompressionException {
+
+        JsonObject result = null;
+
+        Object edgeLists = innerObj.get(CBModel.PROP_EDGES);
+
+        if (cfg.isCompressionEnabled()) {
+
+            //The edge lists are then encoded as a string
+            String comprStr = (String) edgeLists;
+            byte[] compr = ZipHelper.comprStringToBytes(comprStr);
+
+            String decomprStr = ZipHelper.decompress(compr);
+            result = JsonObject.fromJson(decomprStr);
+
+        } else {
+
+            result = (JsonObject) edgeLists;
+        }
+
+        return result;
+    }
+
 
     /**
      * Overrides the refresh method by making sure that the inner JSON object
@@ -412,7 +478,17 @@ public final class CBVertex extends CBElement implements Vertex {
                 
         if (super.refresh())
         {
-            this.innerEdges =  innerObj.getObject(CBModel.PROP_EDGES);
+
+            try {
+            
+                this.innerEdges =  decompressEdges();
+            
+            } catch (ZipHelper.DecompressionException ex) {
+                
+                LOG.severe(ex.toString());
+                return false;                
+            }
+            
             this.innerOutgoingEdges = innerEdges.getObject(CBModel.PROP_EDGES_OUT);
             this.innerIncomingEdges = innerEdges.getObject(CBModel.PROP_EDGES_IN);
             

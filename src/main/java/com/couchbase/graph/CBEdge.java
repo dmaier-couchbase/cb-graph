@@ -20,6 +20,7 @@ import static com.couchbase.graph.views.ViewManager.*;
 import com.couchbase.client.java.view.ViewResult;
 import com.couchbase.client.java.view.ViewRow;
 import com.couchbase.graph.error.DocNotFoundException;
+import com.couchbase.graph.helper.ZipHelper;
 import com.couchbase.graph.views.ViewManager;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
@@ -29,6 +30,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -184,12 +186,17 @@ public final class CBEdge extends CBElement implements Edge {
             CBVertex vSource = (CBVertex) this.getVertex(Direction.OUT);
             CBVertex vTarget = (CBVertex) this.getVertex(Direction.IN);
             
-            //Remove the edge from it
-            vSource.removeEdgeFromAdjacencyList(this.innerLabel, cbKey, Direction.OUT);
-            vTarget.removeEdgeFromAdjacencyList(this.innerLabel, cbKey, Direction.IN);
-            
-            //This removes the object
-            super.remove();
+            //Remove the edge from it   
+            try {
+                
+                vSource.removeEdgeFromAdjacencyList(this.innerLabel, cbKey, Direction.OUT);
+                vTarget.removeEdgeFromAdjacencyList(this.innerLabel, cbKey, Direction.IN);
+                super.remove();
+                
+            } catch (ZipHelper.CompressionException ex) {
+                
+                LOG.severe(ex.toString());
+            }
     }
     
    

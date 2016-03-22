@@ -19,12 +19,11 @@ package com.couchbase.graph;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.view.ViewResult;
-import com.couchbase.client.java.view.ViewRow;
 import com.couchbase.graph.cfg.ConfigManager;
 import com.couchbase.graph.conn.ConnectionFactory;
 import com.couchbase.graph.error.DocNotFoundException;
 import com.couchbase.graph.error.IdGenException;
+import com.couchbase.graph.helper.ZipHelper;
 import com.couchbase.graph.views.ViewManager;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
@@ -33,8 +32,6 @@ import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.GraphQuery;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.util.DefaultGraphQuery;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -124,18 +121,29 @@ public class CBGraph implements Graph {
             JsonObject in = JsonObject.empty();
             JsonObject out = JsonObject.empty();
             JsonObject edges = JsonObject.empty();
-                    
             edges.put(CBModel.PROP_EDGES_IN, in);
             edges.put(CBModel.PROP_EDGES_OUT, out);
 
-            v.put(CBModel.PROP_EDGES, edges);
+            if (ConfigManager.getGraphConfig().isCompressionEnabled()) {
+                
+                String comprEdges = ZipHelper.comprBytesToString(
+                        ZipHelper.compress(edges.toString())
+                );
+                
+                v.put(CBModel.PROP_EDGES, comprEdges);
+                
+            } else {
+                
+                v.put(CBModel.PROP_EDGES, edges);
+            }
+            
 
             JsonDocument doc = JsonDocument.create(CBVertex.genVertexKey(id), v);
             client.insert(doc);
             
             result = new CBVertex(id, this);
 
-        } catch (IdGenException | DocNotFoundException ex) {
+        } catch (IdGenException | DocNotFoundException | ZipHelper.CompressionException ex) {
             
             LOG.severe(ex.toString());
             return result;
@@ -275,7 +283,7 @@ public class CBGraph implements Graph {
             else
                 result = new CBEdge(eKey, this);
 
-        } catch (DocNotFoundException e) {
+        } catch (DocNotFoundException |ZipHelper.CompressionException  e) {
 
             LOG.severe(e.toString());
         }

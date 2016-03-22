@@ -16,6 +16,7 @@
 package com.couchbase.graph.helper;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -46,7 +47,7 @@ public class ZipTest {
     }
     
     
-     @Test
+    @Test
     public void testDeCompress() throws ZipHelper.CompressionException, ZipHelper.DecompressionException, UnsupportedEncodingException {
     
         System.out.println("-- testDeCompress");
@@ -57,4 +58,36 @@ public class ZipTest {
         String decompressed = ZipHelper.decompress(zipped);        
         assertEquals(hello, decompressed);
     }
+
+    @Test
+    public void testCompressedAsStr() throws ZipHelper.CompressionException, ZipHelper.DecompressionException, UnsupportedEncodingException {
+    
+        System.out.println("-- testCompressedAsStr");
+        
+        String hello =  "Hello Hello Hello Hello Hello Hello Hello Hello" +
+                        "Hello Hello Hello Hello Hello Hello Hello Hello" +
+                        "Hello Hello Hello Hello Hello Hello Hello Hello" +
+                        "Hello Hello Hello Hello Hello Hello Hello Hello" +
+                        "Hello Hello Hello Hello Hello Hello Hello Hello" +
+                        "Hello Hello Hello Hello Hello Hello Hello Hello" +
+                        "Hello Hello Hello Hello Hello Hello Hello Hello" +
+                        "Hello Hello Hello Hello Hello Hello Hello Hello";
+    
+       
+        System.out.println("in = " + hello + "(" + hello.length() + ")");
+        
+        byte[] zipped = ZipHelper.compress(hello); 
+        
+        System.out.println("out = " + Arrays.toString(zipped));
+        
+        String zippedStr = ZipHelper.comprBytesToString(zipped);
+        
+        System.out.println("outStr = " + zippedStr + "(" + zippedStr.length() + ")");
+        
+        byte[] zippedArr = ZipHelper.comprStringToBytes(zippedStr);
+        
+        System.out.println("out = " + Arrays.toString(zippedArr));  
+    }
+
 }
+
