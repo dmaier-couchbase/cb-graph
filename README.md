@@ -84,19 +84,47 @@ e_tae_barney->|guest of|->tae_moe
 This is the JSON string of a vertex:
 
 ```
-{\"edges\":{\"in\":{},\"out\":{}},\"type\":\"vertex\",\"props\":{\"city\":\"Springfield\",\"last_name\":\"Simpson\",\"first_name\":\"Bart\",\"is_student\":true,\"age\":8}}
+{
+        "edges":{
+                     "in":{},
+                     "out":{}
+        },
+        "type": "vertex",
+        "props":{
+                "city":"Springfield",
+                "last_name":"Simpson",
+                "first_name":"Bart",
+                "is_student":true,
+                "age":8
+        }
+}
 ```
 
 This is the JSON string of a vertex with edges:
 
 ```
-{\"edges\":{\"in\":{\"son of\":[\"e_tae_bart->|son of|->tae_homer\"]},\"out\":{}},\"type\":\"vertex\",\"props\":{}}
+{
+        "edges":{
+                "in": {
+                        "son of": ["e_tae_bart->|son of|->tae_homer"]
+                },
+                "out":{}
+        },
+        "type": "vertex",
+        "props": {}
+}
 ```
 
 This is the JSON stirng of an edge:
 
 ```
-{\"to\":\"v_tae_homer\",\"label\":\"son of\",\"from\":\"v_tae_bart\",\"type\":\"edge\"}
+{
+        "to": "v_tae_homer",
+        "label": "son of",
+        "from":
+        "v_tae_bart",
+        "type": "edge"
+}
 ```
 
 ## Compression
