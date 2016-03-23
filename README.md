@@ -129,7 +129,7 @@ This is the JSON stirng of an edge:
 
 ## Compression
 
-The latest version of CBGraph supports adjacency list compression. Vertices can become quite big if they have a huge amount of incoming or outgoing edges (such a vertex is called a super node). The main limitation which such a super node is that it just takes longer to transfer a 10MB vertex over the wire than a 1KB one. In order allow a better management of such super nodes 2 optimization steps were introduced for CBGraph.
+The latest version of CBGraph supports adjacency list compression. Vertices can become quite big if they have a huge amount of incoming or outgoing edges (such a vertex is called a supernode). One of the limitations which such a supernode introduces is that it just takes longer to transfer a e.g. a 10MB vertex over the wire than e.g. a 1KB one. In order support such supernodes better by reducing the network latency, two optimization steps were introduced for CBGraph.
 
 1. Compress the adjacency lists by still storing it at the vertex (as base64 string). The base64 encoding causes that the lists are taking a bit more space for small vertices but you save up to 50% for super nodes.
 2. Externalize and compress the adjacency list as a binary
