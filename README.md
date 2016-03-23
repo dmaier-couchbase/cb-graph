@@ -135,7 +135,7 @@ The latest version of CBGraph supports adjacency list compression. Vertices can 
 2. Externalize and compress the adjacency list as a binary
 
 
-> *Important*
+> Important:
 > A Graph which was previously created uncompressed can not be handled if compression is enabled later and vice versa. 
 > So the decision which compression mode should be used is a life time decision.
 > The recommendation is to load your data again into a second compressed graph.
