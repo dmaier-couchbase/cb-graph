@@ -144,14 +144,22 @@ There are the following switches in the 'graph.properties' file:
 * graph.compression.enabled
 * graph.compression.binary
 
-The following would enable compressed adjacency lists by storing them at the vertex as base64 string:
+Here the settings for the different modes:
+
+* *(1)* The following means that compression is disabled:
+
+```
+graph.compression.enabled=false
+```
+
+* *(2)* The following would enable compressed adjacency lists by storing them at the vertex as base64 string:
 
 ```
 graph.compression.enabled=true
 graph.compression.binary=false
 ```
 
-The following would enable compressed adjacency lists by storing them as seperated binary documents:
+* *(3)* The following would enable compressed adjacency lists by storing them as seperated binary documents:
 
 ```
 graph.compression.enabled=true
@@ -160,7 +168,7 @@ graph.compression.binary=false
 
 The inner (physical) document model then changes dependent on your choice:
 
-* (1) Adjacency lists as embedded JSON documents
+* *(1)* Adjacency lists as embedded JSON documents
 
 ```
 v_$id : {
@@ -170,7 +178,7 @@ edges : {...}
 }
 ```
 
-* (2) Adjacency lists as embedded String (gzipped and base64 encoded)
+* *(2)* Adjacency lists as embedded String (gzipped and base64 encoded)
 
 ```
 v_$id : {
@@ -180,7 +188,7 @@ edges : "base64 encoded string"
 }
 ```
 
-* (3) Adjacency list externalized as compressed binary (gzipped)
+* *(3)* Adjacency lists are externalized and compressed as binary (gzipped)
 
 ```
 v_$id : {
