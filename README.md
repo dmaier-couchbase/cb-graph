@@ -166,7 +166,7 @@ graph.compression.binary=false
 
 ```
 graph.compression.enabled=true
-graph.compression.binary=false
+graph.compression.binary=true
 ```
 
 The inner (physical) document model then changes dependent on your choice:
