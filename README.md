@@ -160,7 +160,7 @@ graph.compression.binary=false
 
 The inner (physical) document model then changes dependent on your choice:
 
-1. Adjacency lists as embedded JSON documents
+* (1) Adjacency lists as embedded JSON documents
 
 ```
 v_$id : {
@@ -170,7 +170,7 @@ edges : {...}
 }
 ```
 
-2. Adjacency lists as embedded String (gzipped and base64 encoded)
+* (2) Adjacency lists as embedded String (gzipped and base64 encoded)
 
 ```
 v_$id : {
@@ -179,7 +179,8 @@ edges : "base64 encoded string"
 ...
 }
 ```
-3. Adjacency list externalized as compressed binary (gzipped)
+
+* (3) Adjacency list externalized as compressed binary (gzipped)
 
 ```
 v_$id : {
