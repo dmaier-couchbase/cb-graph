@@ -2,6 +2,8 @@
 
 This is an implementation of Tinkerpop's Graph API for Couchbase
 
+> The following shows a demo application which uses CBGraph
+
 ![alt tag](https://raw.github.com/dmaier-couchbase/cb-graph-viz/master/screenshot.png)
 
 
