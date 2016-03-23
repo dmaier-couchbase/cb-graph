@@ -156,13 +156,13 @@ public final class CBVertex extends CBElement implements Vertex {
                     
                     JsonArray labeledInEdges = innerIncomingEdges.getArray(label);
 
-                    result = edgesFromJsonArr(result, labeledInEdges, graph);
+                    result.addAll(edgesFromJsonArr(result, labeledInEdges, graph));
                 }
 
                 if (drctn.equals(Direction.OUT) || drctn.equals(Direction.BOTH)) {
                     JsonArray labeledOutEdges = innerOutgoingEdges.getArray(label);
 
-                    result = edgesFromJsonArr(result, labeledOutEdges, graph);
+                    result.addAll(edgesFromJsonArr(result, labeledOutEdges, graph));
                 }
 
             }
