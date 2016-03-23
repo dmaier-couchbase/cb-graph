@@ -174,9 +174,9 @@ The inner (physical) document model then changes dependent on your choice:
 * *(1)* Adjacency lists as embedded JSON documents
 
 ```
-v_$id : {
+"v_$id" : {
 ...
-edges : {...}
+        "edges" : {...}
 ...
 }
 ```
@@ -184,9 +184,9 @@ edges : {...}
 * *(2)* Adjacency lists as embedded String (gzipped and base64 encoded)
 
 ```
-v_$id : {
+"v_$id ": {
 ...
-edges : "base64 encoded string"
+        "edges" : "base64 encoded string"
 ...
 }
 ```
@@ -194,13 +194,13 @@ edges : "base64 encoded string"
 * *(3)* Adjacency lists are externalized and compressed as binary (gzipped)
 
 ```
-v_$id : {
+"v_$id" : {
 ...
-edges : "al_$id"
+        "edges" : "al_$id"
 ...
 }
 
-al_$id : $bin
+"al_$id" : $bin
 ```
 
 Which mode is the prefered one depends. Mode 1 allows you to access you the underlying documents in a more human readable form. If you have supernodes then option 3 brings the most benefit because you save the base64 encoding overhead (regarding space).
