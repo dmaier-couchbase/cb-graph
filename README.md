@@ -134,7 +134,8 @@ The latest version of CBGraph supports adjacency list compression. Vertices can 
 1. Compress the adjacency lists by still storing it at the vertex (as base64 string). The base64 encoding causes that the lists are taking a bit more space for small vertices but you save up to 50% for super nodes.
 2. Externalize and compress the adjacency list as a binary
 
-*Important*
+
+> *Important*
 > A Graph which was previously created uncompressed can not be handled if compression is enabled later and vice versa. 
 > So the decision which compression mode should be used is a life time decision.
 > The recommendation is to load your data again into a second compressed graph.
