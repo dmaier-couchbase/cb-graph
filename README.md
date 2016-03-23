@@ -98,3 +98,69 @@ This is the JSON stirng of an edge:
 ```
 {\"to\":\"v_tae_homer\",\"label\":\"son of\",\"from\":\"v_tae_bart\",\"type\":\"edge\"}
 ```
+
+## Compression
+
+The latest version of CBGraph supports adjacency list compression. Vertices can become quite big if they have a huge amount of incoming or outgoing edges (such a vertex is called a super node). The main limitation which such a super node is that it just takes longer to transfer a 10MB vertex over the wire than a 1KB one. In order allow a better management of such super nodes 2 optimization steps were introduced for CBGraph.
+
+1. Compress the adjacency lists by still storing it at the vertex (as base64 string). The base64 encoding causes that the lists are taking a bit more space for small vertices but you save up to 50% for super nodes.
+2. Externalize and compress the adjacency list as a binary
+
+*Important*
+> A Graph which was previously created uncompressed can not be handled if compression is enabled later and vice versa. 
+> So the decision which compression mode should be used is a life time decision.
+> The recommendation is to load your data again into a second compressed graph.
+
+There are the following switches in the 'graph.properties' file:
+
+* graph.compression.enabled
+* graph.compression.binary
+
+The following would enable compressed adjacency lists by storing them at the vertex as base64 string:
+
+```
+graph.compression.enabled=true
+graph.compression.binary=false
+```
+
+The following would enable compressed adjacency lists by storing them as seperated binary documents:
+
+```
+graph.compression.enabled=true
+graph.compression.binary=false
+```
+
+The inner (physical) document model then changes dependent on your choice:
+
+1. Adjacency lists as embedded JSON documents
+
+```
+v_$id : {
+...
+edges : {...}
+...
+}
+```
+
+2. Adjacency lists as embedded String (gzipped and base64 encoded)
+
+```
+v_$id : {
+...
+edges : "base64 encoded string"
+...
+}
+```
+3. Adjacency list externalized as compressed binary (gzipped)
+
+```
+v_$id : {
+...
+edges : "al_$id"
+...
+}
+
+al_$id : $bin
+```
+
+Which mode is the prefered one depends. Mode 1 allows you to access you the underlying documents in a more human readable form. If you have supernodes then option 3 brings the most benefit because you save the base64 encoding overhead (regarding space).
