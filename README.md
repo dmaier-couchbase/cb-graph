@@ -19,9 +19,16 @@ cb.con.bucket.pwd=test
 cb.timeout.op=30000
 cb.admin.user=couchbase
 cb.admin.pwd=couchbase
+
+## Views on side of Couchbase
+cb.view.autocreate=true
 cb.view.designdoc=graph_views
 cb.view.alledges=all_edges
 cb.view.allvertices=all_vertices
+cb.view.allindexes=all_indexes
+cb.view.alledgelabels=all_edge_labels
+cb.view.allvertexprops=all_vertex_props
+cb.view.alledgeprops=all_edge_props
 ```
 
 ## Add vertices
