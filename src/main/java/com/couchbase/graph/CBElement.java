@@ -178,12 +178,16 @@ public class CBElement implements Element {
         {
             refresh();
             Object prop = innerProps.get(key);
-            
+
             if (prop != null)
             {
+                if (prop instanceof JsonArray) {
+                    final Object object = ((JsonArray) prop).toList();
+                    return (T) object;
+                }
                 return (T) prop;
             }
-            
+
         }
         catch (DocNotFoundException e)
         {
@@ -228,8 +232,13 @@ public class CBElement implements Element {
        
         try {
             refresh();
-            
-            innerProps.put(key, value);  
+
+            if (value instanceof List) {
+                innerProps.put(key, JsonArray.from((List)value));
+            } else {
+                innerProps.put(key, value);
+            }
+
             client.replace(JsonDocument.create(cbKey, innerObj));
            
         } catch (DocNotFoundException e) {
